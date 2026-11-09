@@ -1,0 +1,18 @@
+name: 1.3.6 Макросы логирования
+
+on:
+  push:
+    paths:
+      - '134-led-module/**'
+      - '.github/workflows/check-1-3-6.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    uses: ant-lab-ru/es-test/.github/workflows/check-1-3-6.yml@master
+    secrets:
+      ES_ACCOUNT_SECRET: ${{ secrets.ES_ACCOUNT_SECRET }}

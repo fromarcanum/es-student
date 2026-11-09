@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "led.h"
+#include "log.h"
 
 const uint BUTTON_PIN = 15;
 const uint DEBOUNCE_MS = 20;
@@ -15,7 +15,7 @@ bool get_button_debounce(uint pin)
 
 void report_led(void)
 {
-    printf("led %s\n", led_is_on() ? "on" : "off");
+    LOG_INF("led %s\n", led_is_on() ? "on" : "off");
 }
 
 void handle_command(int command)
@@ -30,9 +30,13 @@ void handle_command(int command)
         led_set(false);
         report_led();
     }
+    else if (command == 'v')
+    {
+        log_version();
+    }
     else
     {
-        printf("unknown command: %c\n", command);
+        LOG_ERR("unknown command: %c\n", command);
     }
 }
 
@@ -61,9 +65,12 @@ int main(void)
 
         int command = getchar_timeout_us(0);
 
-        if (command != PICO_ERROR_TIMEOUT)
+        if (command == PICO_ERROR_TIMEOUT)
         {
-            handle_command(command);
+            continue;
         }
+
+        LOG_DBG("got %c\n", command);
+        handle_command(command);
     }
 }

@@ -13,10 +13,12 @@ pico_sdk_init()
 add_executable(${PROJECT_NAME}
     main.c
     led/led.c
+    logging/log.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/led
+    ${CMAKE_CURRENT_SOURCE_DIR}/logging
 )
 
 target_link_libraries(${PROJECT_NAME}
