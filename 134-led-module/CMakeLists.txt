@@ -5,7 +5,8 @@ set(PICO_PLATFORM rp2040)
 
 include(pico_sdk_import.cmake)
 
-project(134_led_module C CXX ASM)
+project(134_led_module)
+enable_language(ASM)
 
 pico_sdk_init()
 
