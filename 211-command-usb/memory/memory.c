@@ -17,7 +17,6 @@ extern char __HeapLimit;
 extern char __StackBottom;
 extern char __StackTop;
 
-#define ADDR(symbol) ((uintptr_t)&(symbol))
 
 static void row(const char *name, uintptr_t start, uintptr_t end)
 {
@@ -35,29 +34,29 @@ void mem_info(void)
     uintptr_t rom_start = ROM_BASE;
     uintptr_t rom_end = rom_start + 16 * 1024;
 
-    uintptr_t image = ADDR(__flash_binary_end) - ADDR(__flash_binary_start);
-    uintptr_t boot2 = ADDR(__boot2_end__) - ADDR(__boot2_start__);
-    uintptr_t text = ADDR(__etext) - ADDR(__boot2_end__);
-    uintptr_t data = ADDR(__data_end__) - ADDR(__data_start__);
-    uintptr_t bss = ADDR(__bss_end__) - ADDR(__bss_start__);
-    uintptr_t heap = ADDR(__HeapLimit) - ADDR(__bss_end__);
-    uintptr_t stack = ADDR(__StackTop) - ADDR(__StackBottom);
-    uintptr_t free_flash = flash_end - ADDR(__flash_binary_end);
+    uintptr_t image = ((uintptr_t)&__flash_binary_end) - ((uintptr_t)&__flash_binary_start);
+    uintptr_t boot2 = ((uintptr_t)&__boot2_end__) - ((uintptr_t)&__boot2_start__);
+    uintptr_t text = ((uintptr_t)&__etext) - ((uintptr_t)&__boot2_end__);
+    uintptr_t data = ((uintptr_t)&__data_end__) - ((uintptr_t)&__data_start__);
+    uintptr_t bss = ((uintptr_t)&__bss_end__) - ((uintptr_t)&__bss_start__);
+    uintptr_t heap = ((uintptr_t)&__HeapLimit) - ((uintptr_t)&__bss_end__);
+    uintptr_t stack = ((uintptr_t)&__StackTop) - ((uintptr_t)&__StackBottom);
+    uintptr_t free_flash = flash_end - ((uintptr_t)&__flash_binary_end);
 
     printf("area       start      end        size\n");
 
     row("flash", flash_start, flash_end);
     row("sram", ram_start, ram_end);
     row("rom", rom_start, rom_end);
-    row("image", ADDR(__flash_binary_start), ADDR(__flash_binary_end));
-    row("free", ADDR(__flash_binary_end), flash_end);
-    row("boot2", ADDR(__boot2_start__), ADDR(__boot2_end__));
-    row("text", ADDR(__boot2_end__), ADDR(__etext));
-    row("data flash", ADDR(__etext), ADDR(__etext) + data);
-    row("data ram", ADDR(__data_start__), ADDR(__data_end__));
-    row("bss", ADDR(__bss_start__), ADDR(__bss_end__));
-    row("heap", ADDR(__bss_end__), ADDR(__HeapLimit));
-    row("stack", ADDR(__StackBottom), ADDR(__StackTop));
+    row("image", ((uintptr_t)&__flash_binary_start), ((uintptr_t)&__flash_binary_end));
+    row("free", ((uintptr_t)&__flash_binary_end), flash_end);
+    row("boot2", ((uintptr_t)&__boot2_start__), ((uintptr_t)&__boot2_end__));
+    row("text", ((uintptr_t)&__boot2_end__), ((uintptr_t)&__etext));
+    row("data flash", ((uintptr_t)&__etext), ((uintptr_t)&__etext) + data);
+    row("data ram", ((uintptr_t)&__data_start__), ((uintptr_t)&__data_end__));
+    row("bss", ((uintptr_t)&__bss_start__), ((uintptr_t)&__bss_end__));
+    row("heap", ((uintptr_t)&__bss_end__), ((uintptr_t)&__HeapLimit));
+    row("stack", ((uintptr_t)&__StackBottom), ((uintptr_t)&__StackTop));
 
     printf("\ntotal\n");
     printf("  flash image %8u = boot2 %u + text %u + data %u\n",
