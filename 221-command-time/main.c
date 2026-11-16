@@ -10,13 +10,14 @@
 #include "memory.h"
 #include "command.h"
 #include "clock.h"
+#include "profiling.h"
 
 #define LINE_SIZE 32
 
 static char line[LINE_SIZE];
 static uint line_length = 0;
 
-// Обычные команды
+// Команды предыдущих заданий
 
 void cmd_info(void) { device_info(); }
 void cmd_version(void) { log_version(); }
@@ -28,10 +29,9 @@ void cmd_boot_info(void) { boot_info(); }
 void cmd_clk_info(void) { clk_info(); }
 void cmd_uptime(void) { uptime(); }
 
-// Прикидка: 175 + 110 + 190 + 110 = 585 тактов на член.
-// 1 000 000 членов при 125 МГц — примерно 4,7 секунды.
-const uint CALC_PI_TERMS = 1000000;
+// Вычисление числа PI
 
+const uint CALC_PI_TERMS = 1000000;
 volatile double pi_result;
 
 double calc_pi(uint terms)
@@ -61,19 +61,36 @@ void cmd_calc_pi(void)
            (unsigned long long)(spent_us / 1000));
 }
 
+// Команды профилирования
+
+void cmd_main_time_exec(void)
+{
+    printf("iteration avg %.2f us, max %u us\n",
+           profiling_avg_us(),
+           (unsigned)profiling_max_us());
+}
+
+void cmd_main_time_reset(void)
+{
+    profiling_reset_max();
+    printf("max reset\n");
+}
+
 // Таблица команд
 
 const struct command_t commands[] = {
-    { "info",      cmd_info },
-    { "version",   cmd_version },
-    { "ping",      cmd_ping },
-    { "mem_info",  cmd_mem_info },
-    { "fw_info",   cmd_fw_info },
-    { "dev_info",  cmd_dev_info },
-    { "boot_info", cmd_boot_info },
-    { "clk_info",  cmd_clk_info },
-    { "uptime",    cmd_uptime },
-    { "calc_pi",   cmd_calc_pi },
+    { "info",            cmd_info },
+    { "version",         cmd_version },
+    { "ping",            cmd_ping },
+    { "mem_info",        cmd_mem_info },
+    { "fw_info",         cmd_fw_info },
+    { "dev_info",        cmd_dev_info },
+    { "boot_info",       cmd_boot_info },
+    { "clk_info",        cmd_clk_info },
+    { "uptime",          cmd_uptime },
+    { "calc_pi",         cmd_calc_pi },
+    { "main_time_exec",  cmd_main_time_exec },
+    { "main_time_reset", cmd_main_time_reset },
 };
 
 const uint command_count =
@@ -125,7 +142,7 @@ void read_line(void)
     }
 }
 
-// Мигание без ожидания
+// Неблокирующее мигание
 
 const uint BLINK_HALF_PERIOD_MS = 500;
 uint64_t last_toggle_us = 0;
@@ -142,13 +159,18 @@ void blink(void)
     }
 }
 
+// Основной суперцикл
+
 int main(void)
 {
     stdio_init_all();
     led_init();
 
+    profiling_init();
+
     while (1)
     {
+        profiling_iteration();
         blink();
         read_line();
     }
