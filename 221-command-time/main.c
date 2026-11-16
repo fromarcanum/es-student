@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "pico/stdlib.h"
-#include "hardware/gpio.h"
 #include "led.h"
 #include "log.h"
 #include "device.h"
@@ -17,12 +16,6 @@ const uint DEBOUNCE_MS = 20;
 char line[LINE_SIZE];
 uint line_length = 0;
 
-bool get_button_debounce(uint pin)
-{
-    bool state = gpio_get(pin);
-    sleep_ms(DEBOUNCE_MS);
-    return state && gpio_get(pin);
-}
 
 void report_led(void)
 {
@@ -32,17 +25,9 @@ void report_led(void)
 
 
 
-void cmd_enable(void)
-{
-    led_set(true);
-    report_led();
-}
 
-void cmd_disable(void)
-{
-    led_set(false);
-    report_led();
-}
+
+
 
 void cmd_info(void)
 {
@@ -84,10 +69,14 @@ void cmd_clk_info(void)
     clk_info();
 }
 
+void cmd_uptime(void)
+{
+    uptime();
+}
+
 const struct command_t commands[] = {
+    { "uptime", cmd_uptime },
     { "clk_info", cmd_clk_info },
-    { "enable", cmd_enable },
-    { "disable", cmd_disable },
     { "info", cmd_info },
     { "version", cmd_version },
     { "ping", cmd_ping },
@@ -145,28 +134,29 @@ void read_line(void)
     }
 }
 
+
+const uint BLINK_HALF_PERIOD_MS = 500;
+uint64_t last_toggle_us = 0;
+
+void blink(void)
+{
+    uint64_t now_us = time_us_64();
+
+    if (now_us - last_toggle_us >= BLINK_HALF_PERIOD_MS * 1000)
+    {
+        last_toggle_us = now_us;
+        led_toggle();
+    }
+}
+
 int main(void)
 {
     stdio_init_all();
     led_init();
 
-    gpio_init(BUTTON_PIN);
-    gpio_set_dir(BUTTON_PIN, GPIO_IN);
-    gpio_pull_up(BUTTON_PIN);
-
-    bool previous = false;
-
     while (1)
     {
-        bool current = get_button_debounce(BUTTON_PIN);
-
-        if (previous && !current)
-        {
-            led_toggle();
-            report_led();
-        }
-
-        previous = current;
+        blink();
         read_line();
     }
 }

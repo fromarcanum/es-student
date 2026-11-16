@@ -44,3 +44,9 @@ void clk_info(void)
            (unsigned)frequency_count_khz(
                CLOCKS_FC0_SRC_VALUE_ROSC_CLKSRC));
 }
+
+void uptime(void)
+{
+    printf("uptime: %llu ms\n",
+           (unsigned long long)(time_us_64() / 1000));
+}
