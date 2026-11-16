@@ -61,7 +61,7 @@ void cmd_calc_pi(void)
            (unsigned long long)(spent_us / 1000));
 }
 
-// Команды профилирования
+// Профилирование
 
 void cmd_main_time_exec(void)
 {
@@ -74,6 +74,18 @@ void cmd_main_time_reset(void)
 {
     profiling_reset_max();
     printf("max reset\n");
+}
+
+// Переключение частоты ядра
+
+void cmd_clk_sys_low(void)
+{
+    clk_sys_low();
+}
+
+void cmd_clk_sys_default(void)
+{
+    clk_sys_default();
 }
 
 // Таблица команд
@@ -91,6 +103,8 @@ const struct command_t commands[] = {
     { "calc_pi",         cmd_calc_pi },
     { "main_time_exec",  cmd_main_time_exec },
     { "main_time_reset", cmd_main_time_reset },
+    { "clk_sys_low",     cmd_clk_sys_low },
+    { "clk_sys_default", cmd_clk_sys_default },
 };
 
 const uint command_count =
@@ -103,7 +117,9 @@ void handle_command(const char *command)
         if (strcmp(command, commands[i].name) == 0)
         {
             if (commands[i].handler != NULL)
+            {
                 commands[i].handler();
+            }
             return;
         }
     }
@@ -165,7 +181,6 @@ int main(void)
 {
     stdio_init_all();
     led_init();
-
     profiling_init();
 
     while (1)
