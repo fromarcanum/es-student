@@ -16,51 +16,49 @@
 static char line[LINE_SIZE];
 static uint line_length = 0;
 
-// Обработчики команд
+// Обычные команды
 
-void cmd_info(void)
+void cmd_info(void) { device_info(); }
+void cmd_version(void) { log_version(); }
+void cmd_ping(void) { printf("pong\n"); }
+void cmd_mem_info(void) { mem_info(); }
+void cmd_fw_info(void) { fw_info(); }
+void cmd_dev_info(void) { dev_info(); }
+void cmd_boot_info(void) { boot_info(); }
+void cmd_clk_info(void) { clk_info(); }
+void cmd_uptime(void) { uptime(); }
+
+// Прикидка: 175 + 110 + 190 + 110 = 585 тактов на член.
+// 1 000 000 членов при 125 МГц — примерно 4,7 секунды.
+const uint CALC_PI_TERMS = 1000000;
+
+volatile double pi_result;
+
+double calc_pi(uint terms)
 {
-    device_info();
+    double sum = 0.0;
+    double sign = 1.0;
+
+    for (uint k = 0; k < terms; k++)
+    {
+        sum += sign / (2.0 * (double)k + 1.0);
+        sign = -sign;
+    }
+
+    return 4.0 * sum;
 }
 
-void cmd_version(void)
+void cmd_calc_pi(void)
 {
-    log_version();
-}
+    uint64_t start_us = time_us_64();
 
-void cmd_ping(void)
-{
-    printf("pong\n");
-}
+    pi_result = calc_pi(CALC_PI_TERMS);
 
-void cmd_mem_info(void)
-{
-    mem_info();
-}
+    uint64_t spent_us = time_us_64() - start_us;
 
-void cmd_fw_info(void)
-{
-    fw_info();
-}
-
-void cmd_dev_info(void)
-{
-    dev_info();
-}
-
-void cmd_boot_info(void)
-{
-    boot_info();
-}
-
-void cmd_clk_info(void)
-{
-    clk_info();
-}
-
-void cmd_uptime(void)
-{
-    uptime();
+    printf("pi: %.8f\n", pi_result);
+    printf("time: %llu ms\n",
+           (unsigned long long)(spent_us / 1000));
 }
 
 // Таблица команд
@@ -75,6 +73,7 @@ const struct command_t commands[] = {
     { "boot_info", cmd_boot_info },
     { "clk_info",  cmd_clk_info },
     { "uptime",    cmd_uptime },
+    { "calc_pi",   cmd_calc_pi },
 };
 
 const uint command_count =
@@ -87,9 +86,7 @@ void handle_command(const char *command)
         if (strcmp(command, commands[i].name) == 0)
         {
             if (commands[i].handler != NULL)
-            {
                 commands[i].handler();
-            }
             return;
         }
     }
@@ -97,7 +94,7 @@ void handle_command(const char *command)
     LOG_ERR("unknown command: %s\n", command);
 }
 
-// Неблокирующий ввод USB
+// Неблокирующий приём команд
 
 void read_line(void)
 {
@@ -128,7 +125,7 @@ void read_line(void)
     }
 }
 
-// Неблокирующее мигание
+// Мигание без ожидания
 
 const uint BLINK_HALF_PERIOD_MS = 500;
 uint64_t last_toggle_us = 0;
@@ -144,8 +141,6 @@ void blink(void)
         led_toggle();
     }
 }
-
-// Основной суперцикл
 
 int main(void)
 {
