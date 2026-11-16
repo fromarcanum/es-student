@@ -10,8 +10,6 @@
 
 #define LINE_SIZE 32
 
-const uint BUTTON_PIN = 15;
-const uint DEBOUNCE_MS = 20;
 
 char line[LINE_SIZE];
 uint line_length = 0;
