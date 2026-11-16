@@ -1,31 +1,22 @@
-#include "clock.h"
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "pico/stdlib.h"
+
 #include "led.h"
 #include "log.h"
 #include "device.h"
 #include "memory.h"
 #include "command.h"
+#include "clock.h"
 
 #define LINE_SIZE 32
 
+static char line[LINE_SIZE];
+static uint line_length = 0;
 
-char line[LINE_SIZE];
-uint line_length = 0;
-
-
-void report_led(void)
-{
-    LOG_INF("led %s\n", led_is_on() ? "on" : "off");
-}
-
-
-
-
-
-
-
+// Обработчики команд
 
 void cmd_info(void)
 {
@@ -72,19 +63,22 @@ void cmd_uptime(void)
     uptime();
 }
 
+// Таблица команд
+
 const struct command_t commands[] = {
-    { "uptime", cmd_uptime },
-    { "clk_info", cmd_clk_info },
-    { "info", cmd_info },
-    { "version", cmd_version },
-    { "ping", cmd_ping },
-    { "mem_info", cmd_mem_info },
-    { "fw_info", cmd_fw_info },
-    { "dev_info", cmd_dev_info },
+    { "info",      cmd_info },
+    { "version",   cmd_version },
+    { "ping",      cmd_ping },
+    { "mem_info",  cmd_mem_info },
+    { "fw_info",   cmd_fw_info },
+    { "dev_info",  cmd_dev_info },
     { "boot_info", cmd_boot_info },
+    { "clk_info",  cmd_clk_info },
+    { "uptime",    cmd_uptime },
 };
 
-const uint command_count = sizeof(commands) / sizeof(commands[0]);
+const uint command_count =
+    sizeof(commands) / sizeof(commands[0]);
 
 void handle_command(const char *command)
 {
@@ -102,6 +96,8 @@ void handle_command(const char *command)
 
     LOG_ERR("unknown command: %s\n", command);
 }
+
+// Неблокирующий ввод USB
 
 void read_line(void)
 {
@@ -132,6 +128,7 @@ void read_line(void)
     }
 }
 
+// Неблокирующее мигание
 
 const uint BLINK_HALF_PERIOD_MS = 500;
 uint64_t last_toggle_us = 0;
@@ -140,12 +137,15 @@ void blink(void)
 {
     uint64_t now_us = time_us_64();
 
-    if (now_us - last_toggle_us >= BLINK_HALF_PERIOD_MS * 1000)
+    if (now_us - last_toggle_us >=
+        BLINK_HALF_PERIOD_MS * 1000)
     {
         last_toggle_us = now_us;
         led_toggle();
     }
 }
+
+// Основной суперцикл
 
 int main(void)
 {
