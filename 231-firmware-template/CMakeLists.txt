@@ -17,6 +17,11 @@ add_subdirectory(
     ${CMAKE_BINARY_DIR}/libs
 )
 
+target_compile_definitions(profiling PUBLIC
+    PROFILING_ENABLED=1
+)
+
+
 # Аппаратный уровень.
 add_library(platform STATIC
     platform/platform.c

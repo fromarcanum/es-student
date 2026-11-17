@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef CLOCK_H
 #define CLOCK_H
 

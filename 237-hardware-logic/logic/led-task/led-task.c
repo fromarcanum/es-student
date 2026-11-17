@@ -68,22 +68,30 @@ uint32_t led_task_get_period_ms(void)
 
 void led_task_handle(void)
 {
-    if (led_state != LED_STATE_BLINK)
-        return;
-
-    uint64_t half_period_us =
-        ((uint64_t)led_period_ms * 1000u) / 2u;
-
-    if (first_blink_toggle)
+    switch (led_state)
     {
-        first_blink_toggle = false;
-        led_output(!led_level);
-        last_toggle_us = systime_us();
+    case LED_STATE_OFF:
+    case LED_STATE_ON:
+        break;
+
+    case LED_STATE_BLINK:
+    {
+        uint64_t half_period_us =
+            ((uint64_t)led_period_ms * 1000u) / 2u;
+
+        if (first_blink_toggle)
+        {
+            first_blink_toggle = false;
+            led_output(!led_level);
+            last_toggle_us = systime_us();
+        }
+        else if (systime_period_elapsed(
+                     &last_toggle_us, half_period_us))
+        {
+            led_output(!led_level);
+        }
+        break;
     }
-    else if (systime_period_elapsed(
-                 &last_toggle_us, half_period_us))
-    {
-        led_output(!led_level);
     }
 }
 
