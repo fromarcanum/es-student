@@ -10,9 +10,11 @@ enable_language(ASM)
 
 pico_sdk_init()
 
+add_compile_options(-Wall)
+
 add_executable(${PROJECT_NAME}
     main.c
-    led/led.c
+    
     logging/log.c
     device/device.c
     
@@ -24,11 +26,12 @@ add_executable(${PROJECT_NAME}
     api/api.c
 
     api/api-callbacks.c
+
+    led-task/led-task.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/led
     ${CMAKE_CURRENT_SOURCE_DIR}/logging
     ${CMAKE_CURRENT_SOURCE_DIR}/device
 )
@@ -58,4 +61,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/stdio-text-protocol
     ${CMAKE_CURRENT_SOURCE_DIR}/api
+)
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/led-task
 )

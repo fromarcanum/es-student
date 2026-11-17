@@ -37,7 +37,7 @@ void device_info(void)
     printf("board: %s\n", DEVICE_BOARD);
     printf("serial: %s\n", board_id);
     printf("chip: manufacturer 0x%03x, part 0x%04x, revision %u\n",
-           manufacturer, part, revision);
+           (unsigned)manufacturer, (unsigned)part, (unsigned)revision);
 }
 
 
