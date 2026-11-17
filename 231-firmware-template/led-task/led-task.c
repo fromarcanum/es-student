@@ -1,3 +1,4 @@
+#include "systime/systime.h"
 #include "led-task.h"
 
 #include "pico/stdlib.h"
@@ -14,22 +15,6 @@ static void led_output(bool on)
 {
     led_level = on;
     gpio_put(PICO_DEFAULT_LED_PIN, on);
-}
-
-static bool period_elapsed(uint64_t *last_us,
-                           uint64_t period_us)
-{
-    uint64_t now_us = time_us_64();
-
-    if (now_us - *last_us < period_us)
-        return false;
-
-    *last_us += period_us;
-
-    if (now_us - *last_us >= period_us)
-        *last_us = now_us;
-
-    return true;
 }
 
 void led_task_init(void)
@@ -105,9 +90,9 @@ void led_task_handle(void)
         {
             first_blink_toggle = false;
             led_output(!led_level);
-            last_toggle_us = time_us_64();
+            last_toggle_us = systime_us();
         }
-        else if (period_elapsed(&last_toggle_us,
+        else if (systime_period_elapsed(&last_toggle_us,
                                 half_period_us))
         {
             led_output(!led_level);

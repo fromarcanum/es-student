@@ -1,6 +1,7 @@
+#include <stddef.h>
+#include "systime/systime.h"
 #include "pi-task.h"
 
-#include "pico/stdlib.h"
 
 // При 125 МГц один член ряда занимает около 4,7 мкс.
 // 64 * 4,7 = 300,8 мкс < 500 мкс.
@@ -46,7 +47,7 @@ bool pi_task_start(uint32_t terms)
     pi_result = 0.0;
     pi_elapsed_ms = 0;
 
-    pi_start_us = time_us_64();
+    pi_start_us = systime_us();
     pi_state = PI_RUNNING;
 
     return true;
@@ -79,7 +80,7 @@ void pi_task_handle(void)
         pi_result = 4.0 * pi_sum;
 
         pi_elapsed_ms =
-            (time_us_64() - pi_start_us) / 1000;
+            (systime_us() - pi_start_us) / 1000;
 
         pi_state = PI_READY;
     }

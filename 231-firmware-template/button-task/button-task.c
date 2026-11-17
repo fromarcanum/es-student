@@ -1,3 +1,4 @@
+#include "systime/systime.h"
 #include "button-task.h"
 
 #include "pico/stdlib.h"
@@ -25,7 +26,7 @@ void button_task_init(void)
     gpio_pull_up(BUTTON_PIN);
 
     state = BUTTON_RELEASED;
-    transition_us = time_us_64();
+    transition_us = systime_us();
     press_count = 0;
 }
 
@@ -43,7 +44,7 @@ uint32_t button_task_get_press_count(void)
 void button_task_handle(void)
 {
     bool pressed = !gpio_get(BUTTON_PIN);
-    uint64_t now = time_us_64();
+    uint64_t now = systime_us();
 
     switch (state)
     {

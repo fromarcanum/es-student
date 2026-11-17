@@ -12,71 +12,40 @@ pico_sdk_init()
 
 add_compile_options(-Wall)
 
+# Общие библиотеки находятся вне папки проекта.
+add_subdirectory(../libs ${CMAKE_BINARY_DIR}/libs)
+
+# 0 — профилирование отключено, 1 — включено.
+target_compile_definitions(profiling PUBLIC
+    PROFILING_ENABLED=1
+)
+
 add_executable(${PROJECT_NAME}
     main.c
-
-    logging/log.c
-    device/device.c
-
-
-    profiling/profiling.c
-
-    stdio-text-protocol/stdio-text-protocol.c
-
     api/api.c
-
     api/api-callbacks.c
-
     led-task/led-task.c
-
     button-task/button-task.c
     pi-task/pi-task.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/logging
-    ${CMAKE_CURRENT_SOURCE_DIR}/device
+    ${CMAKE_CURRENT_SOURCE_DIR}/api
+    ${CMAKE_CURRENT_SOURCE_DIR}/led-task
+    ${CMAKE_CURRENT_SOURCE_DIR}/button-task
+    ${CMAKE_CURRENT_SOURCE_DIR}/pi-task
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
-    hardware_clocks
-    pico_unique_id
+    stdio_text_protocol
+    systime
+    profiling
+    device
+    logging
 )
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    DEVICE_BOARD="${PICO_BOARD}"
-)
-
 
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
-
 pico_add_extra_outputs(${PROJECT_NAME})
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/profiling
-)
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/stdio-text-protocol
-    ${CMAKE_CURRENT_SOURCE_DIR}/api
-)
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/led-task
-)
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/button-task
-)
-
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/pi-task
-)

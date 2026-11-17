@@ -1,29 +1,25 @@
-#include "device.h"
+#include "device/device.h"
 
 #include <stddef.h>
-
 #include "pico/version.h"
 #include "pico/unique_id.h"
-
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sysinfo.h"
+
+#ifndef DEVICE_BOARD
+#define DEVICE_BOARD "unknown"
+#endif
 
 void device_get_info(device_info_t *info)
 {
     if (info == NULL)
         return;
 
-    info->name = DEVICE_NAME;
-    info->version = FIRMWARE_VERSION;
-    info->project = DEVICE_PROJECT;
-    info->repo = DEVICE_REPO;
     info->board = DEVICE_BOARD;
     info->sdk_version = PICO_SDK_VERSION_STRING;
 
     pico_get_unique_board_id_string(
-        info->serial,
-        sizeof(info->serial)
-    );
+        info->serial, sizeof(info->serial));
 
     volatile const uint32_t *chip_id =
         (volatile const uint32_t *)
