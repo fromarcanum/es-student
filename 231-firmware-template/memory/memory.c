@@ -73,7 +73,7 @@ void mem_info(void)
 
 #include <stdlib.h>
 #include "command.h"
-#include "device.h"
+#include "device/device.h"
 
 int main(void);
 

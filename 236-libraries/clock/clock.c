@@ -1,3 +1,4 @@
+#include "systime/systime.h"
 #include <stdio.h>
 #include <stdint.h>
 
@@ -5,7 +6,7 @@
 #include "hardware/clocks.h"
 #include "hardware/regs/clocks.h"
 
-#include "log.h"
+#include "logging/log.h"
 #include "clock.h"
 
 const uint32_t CLK_SYS_LOW_KHZ = 62500;
@@ -53,7 +54,7 @@ void clk_info(void)
 void uptime(void)
 {
     printf("uptime: %llu ms\n",
-           (unsigned long long)(time_us_64() / 1000));
+           (unsigned long long)(systime_us() / 1000));
 }
 
 // set_sys_clock_khz() вызывает set_sys_clock_pll().
