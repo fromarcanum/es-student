@@ -12,35 +12,57 @@ pico_sdk_init()
 
 add_compile_options(-Wall)
 
-# Общие библиотеки находятся вне папки проекта.
-add_subdirectory(../libs ${CMAKE_BINARY_DIR}/libs)
-
-# 0 — профилирование отключено, 1 — включено.
-target_compile_definitions(profiling PUBLIC
-    PROFILING_ENABLED=1
+add_subdirectory(
+    ../libs
+    ${CMAKE_BINARY_DIR}/libs
 )
 
+# Аппаратный уровень.
+add_library(platform STATIC
+    platform/platform.c
+)
+
+target_include_directories(platform PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(platform PRIVATE
+    pico_stdlib
+)
+
+# Логика прибора — без Pico SDK.
+add_library(logic STATIC
+    logic/api/api.c
+    logic/api/api-callbacks.c
+    logic/led-task/led-task.c
+    logic/button-task/button-task.c
+    logic/pi-task/pi-task.c
+)
+
+target_include_directories(logic PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/logic
+)
+
+target_link_libraries(logic
+    PUBLIC
+        stdio_text_protocol
+    PRIVATE
+        platform
+        systime
+        profiling
+        device
+        logging
+)
+
+# Главная программа.
 add_executable(${PROJECT_NAME}
     main.c
-    api/api.c
-    api/api-callbacks.c
-    led-task/led-task.c
-    button-task/button-task.c
-    pi-task/pi-task.c
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/api
-    ${CMAKE_CURRENT_SOURCE_DIR}/led-task
-    ${CMAKE_CURRENT_SOURCE_DIR}/button-task
-    ${CMAKE_CURRENT_SOURCE_DIR}/pi-task
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
-    stdio_text_protocol
-    systime
+    logic
+    platform
     profiling
     device
     logging

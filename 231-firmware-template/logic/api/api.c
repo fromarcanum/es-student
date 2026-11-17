@@ -1,8 +1,10 @@
+#include "api/api.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#include "api.h"
-#include "api-commands.h"
+
+#include "api/api-commands.h"
 
 void api_handle(const command_t *command)
 {

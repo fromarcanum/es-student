@@ -3,15 +3,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum {
+typedef enum
+{
     LED_STATE_OFF,
     LED_STATE_ON,
-    LED_STATE_BLINK,
+    LED_STATE_BLINK
 } led_state_t;
 
 void led_task_init(void);
 void led_task_handle(void);
-
 void led_task_set_state(led_state_t state);
 led_state_t led_task_get_state(void);
 

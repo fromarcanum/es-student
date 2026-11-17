@@ -1,6 +1,8 @@
+#include "pi-task/pi-task.h"
+
 #include <stddef.h>
 #include "systime/systime.h"
-#include "pi-task.h"
+
 
 
 // При 125 МГц один член ряда занимает около 4,7 мкс.

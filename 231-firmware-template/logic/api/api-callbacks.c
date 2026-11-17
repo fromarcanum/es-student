@@ -1,3 +1,5 @@
+#include "api/api-commands.h"
+
 #include "systime/systime.h"
 #include "firmware.h"
 #include <stdio.h>
@@ -10,10 +12,10 @@
 
 #include "device/device.h"
 #include "profiling/profiling.h"
-#include "led-task.h"
-#include "button-task.h"
-#include "pi-task.h"
-#include "api-commands.h"
+#include "led-task/led-task.h"
+#include "button-task/button-task.h"
+#include "pi-task/pi-task.h"
+
 
 #define DEFAULT_PI_TERMS 1000000u
 
