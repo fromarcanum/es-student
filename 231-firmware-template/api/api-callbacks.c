@@ -39,7 +39,24 @@ static bool parse_u32(const char *text, uint32_t *value)
 static void cmd_info(const command_t *command)
 {
     (void)command;
-    device_info();
+
+    device_info_t info;
+    device_get_info(&info);
+
+    printf("name: %s\n", info.name);
+    printf("version: %s\n", info.version);
+    printf("project: %s\n", info.project);
+    printf("repo: %s\n", info.repo);
+    printf("board: %s\n", info.board);
+    printf("serial: %s\n", info.serial);
+
+    printf("chip: manufacturer 0x%03x, "
+           "part 0x%04x, revision %u\n",
+           (unsigned)info.manufacturer,
+           (unsigned)info.part,
+           (unsigned)info.revision);
+
+    printf("pico-sdk: %s\n", info.sdk_version);
 }
 
 static void cmd_uptime(const command_t *command)
@@ -50,21 +67,30 @@ static void cmd_uptime(const command_t *command)
            (unsigned long long)(time_us_64() / 1000));
 }
 
-static void cmd_main_time_exec(const command_t *command)
+static void cmd_profiling(const command_t *command)
 {
     (void)command;
 
-    printf("iteration avg %.2f us, max %u us\n",
-           profiling_avg_us(),
-           (unsigned)profiling_max_us());
+    for (uint32_t i = 0; i < PROFILING_STOPWATCH_COUNT; i++)
+    {
+        profiling_result_t result;
+
+        if (profiling_get(i, &result))
+        {
+            printf("%-10s count %-10u mean %.2f us  max %u us\n",
+                   result.name,
+                   (unsigned)result.count,
+                   result.mean_us,
+                   (unsigned)result.max_us);
+        }
+    }
 }
 
-static void cmd_main_time_reset(const command_t *command)
+static void cmd_profiling_reset(const command_t *command)
 {
     (void)command;
-
-    profiling_reset_max();
-    printf("max reset\n");
+    profiling_reset();
+    printf("profiling reset\n");
 }
 
 static void led_reply(void)
@@ -204,8 +230,8 @@ static void cmd_pi(const command_t *command)
 const api_command_t api_commands[] = {
     { "info", "device passport", cmd_info },
     { "uptime", "time since reset", cmd_uptime },
-    { "main_time_exec", "superloop iteration", cmd_main_time_exec },
-    { "main_time_reset", "reset maximum iteration", cmd_main_time_reset },
+    { "profiling", "show timing statistics", cmd_profiling },
+    { "profiling_reset", "reset timing statistics", cmd_profiling_reset },
     { "led_enable", "turn LED on", cmd_led_enable },
     { "led_disable", "turn LED off", cmd_led_disable },
     { "led_blink", "blink LED", cmd_led_blink },

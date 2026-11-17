@@ -1,53 +1,84 @@
 #include "profiling.h"
+
+#include <stddef.h>
+#include <stdint.h>
 #include "pico/stdlib.h"
 
-// Обычная итерация около 2 мкс.
-// За секунду проходит около 500 000 итераций.
-// N = 2^19 = 524 288, то есть память среднего около 1 секунды.
-#define AVG_SHIFT 19
-
-// Точность среднего: 1/256 микросекунды.
-#define FRACTION_SHIFT 8
-
-static uint32_t previous_us = 0;
-static uint32_t max_us = 0;
-static uint64_t avg_sum = 0;
-
-void profiling_init(void)
+typedef struct
 {
-    previous_us = time_us_32();
-    max_us = 0;
-    avg_sum = 0;
+    const char *name;
+    uint64_t start_us;
+    uint32_t sum_us;
+    uint32_t count;
+    uint32_t max_us;
+    bool running;
+} stopwatch_t;
+
+static stopwatch_t sw[PROFILING_STOPWATCH_COUNT];
+
+void profiling_stopwatch_init(uint32_t id, const char *name)
+{
+    if (id >= PROFILING_STOPWATCH_COUNT)
+        return;
+
+    sw[id] = (stopwatch_t){0};
+    sw[id].name = name;
 }
 
-void profiling_iteration(void)
+void profiling_start(uint32_t id)
 {
-    uint32_t now_us = time_us_32();
-    uint32_t iteration_us = now_us - previous_us;
-    previous_us = now_us;
+    if (id >= PROFILING_STOPWATCH_COUNT ||
+        sw[id].name == NULL || sw[id].running)
+        return;
 
-    if (iteration_us > max_us)
+    sw[id].start_us = time_us_64();
+    sw[id].running = true;
+}
+
+void profiling_stop(uint32_t id)
+{
+    if (id >= PROFILING_STOPWATCH_COUNT || !sw[id].running)
+        return;
+
+    uint64_t elapsed = time_us_64() - sw[id].start_us;
+    sw[id].running = false;
+
+    uint32_t duration = elapsed > UINT32_MAX
+                        ? UINT32_MAX : (uint32_t)elapsed;
+
+    sw[id].count++;
+    sw[id].sum_us += duration;
+
+    if (duration > sw[id].max_us)
+        sw[id].max_us = duration;
+}
+
+bool profiling_get(uint32_t id, profiling_result_t *result)
+{
+    if (id >= PROFILING_STOPWATCH_COUNT ||
+        result == NULL || sw[id].name == NULL)
+        return false;
+
+    result->name = sw[id].name;
+    result->count = sw[id].count;
+    result->max_us = sw[id].max_us;
+    result->mean_us = sw[id].count
+        ? (double)sw[id].sum_us / sw[id].count : 0.0;
+
+    return true;
+}
+
+void profiling_reset(void)
+{
+    uint64_t now = time_us_64();
+
+    for (uint32_t i = 0; i < PROFILING_STOPWATCH_COUNT; i++)
     {
-        max_us = iteration_us;
+        sw[i].count = 0;
+        sw[i].sum_us = 0;
+        sw[i].max_us = 0;
+
+        if (sw[i].running)
+            sw[i].start_us = now;
     }
-
-    avg_sum = avg_sum
-        - (avg_sum >> AVG_SHIFT)
-        + ((uint64_t)iteration_us << FRACTION_SHIFT);
-}
-
-float profiling_avg_us(void)
-{
-    return (float)(avg_sum >> AVG_SHIFT)
-        / (1 << FRACTION_SHIFT);
-}
-
-uint32_t profiling_max_us(void)
-{
-    return max_us;
-}
-
-void profiling_reset_max(void)
-{
-    max_us = 0;
 }
