@@ -4,7 +4,7 @@
 #include "led-task.h"
 
 #define BUTTON_PIN 15u
-#define DEBOUNCE_US 20000u
+#define DEBOUNCE_US (20 * 1000)
 
 typedef enum
 {
