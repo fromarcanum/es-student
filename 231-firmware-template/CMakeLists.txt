@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}
     led-task/led-task.c
 
     button-task/button-task.c
+    pi-task/pi-task.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -73,4 +74,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/button-task
+)
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/pi-task
 )
