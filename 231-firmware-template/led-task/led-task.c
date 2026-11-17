@@ -117,3 +117,21 @@ void led_task_handle(void)
     }
     }
 }
+
+void led_task_next_state(void)
+{
+    switch (led_task_get_state())
+    {
+    case LED_STATE_OFF:
+        led_task_set_state(LED_STATE_ON);
+        break;
+
+    case LED_STATE_ON:
+        led_task_set_state(LED_STATE_BLINK);
+        break;
+
+    case LED_STATE_BLINK:
+        led_task_set_state(LED_STATE_OFF);
+        break;
+    }
+}

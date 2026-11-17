@@ -1,3 +1,4 @@
+#include "button-task.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -160,7 +161,18 @@ static void cmd_led_period(const command_t *command)
     led_reply();
 }
 
+
+static void cmd_button(const command_t *command)
+{
+    (void)command;
+
+    printf("button: %s, presses %u\n",
+           button_task_is_pressed() ? "pressed" : "released",
+           (unsigned)button_task_get_press_count());
+}
+
 const api_command_t api_commands[] = {
+    { "button", "button state and press count", cmd_button },
     { "info", "device passport", cmd_info },
     { "uptime", "time since reset", cmd_uptime },
     { "calc_pi", "calculate pi: calc_pi [terms]", cmd_calc_pi },

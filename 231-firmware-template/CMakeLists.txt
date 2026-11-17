@@ -14,11 +14,11 @@ add_compile_options(-Wall)
 
 add_executable(${PROJECT_NAME}
     main.c
-    
+
     logging/log.c
     device/device.c
-    
-    
+
+
     profiling/profiling.c
 
     stdio-text-protocol/stdio-text-protocol.c
@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME}
     api/api-callbacks.c
 
     led-task/led-task.c
+
+    button-task/button-task.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -66,4 +68,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/led-task
+)
+
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/button-task
 )
