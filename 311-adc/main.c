@@ -9,6 +9,7 @@
 #include "led-task/led-task.h"
 #include "button-task/button-task.h"
 #include "pi-task/pi-task.h"
+#include "telemetry-task/telemetry-task.h"
 
 typedef enum
 {
@@ -16,7 +17,8 @@ typedef enum
     SW_COMMAND,
     SW_LED,
     SW_BUTTON,
-    SW_PI
+    SW_PI,
+    STOPWATCH_TELEMETRY
 } stopwatch_id_t;
 
 int main(void)
@@ -30,6 +32,7 @@ int main(void)
     stdio_text_protocol_init();
     led_task_init();
     pi_task_init();
+    telemetry_task_init(api_print_telemetry);
 
     // Связываем кнопку со светодиодом.
     button_task_init(led_task_next_state);
@@ -39,6 +42,7 @@ int main(void)
     profiling_stopwatch_init(SW_LED, "led");
     profiling_stopwatch_init(SW_BUTTON, "button");
     profiling_stopwatch_init(SW_PI, "pi");
+    profiling_stopwatch_init(STOPWATCH_TELEMETRY, "telemetry");
 
     while (1)
     {
@@ -55,6 +59,10 @@ int main(void)
         profiling_start(SW_PI);
         pi_task_handle();
         profiling_stop(SW_PI);
+
+        profiling_start(STOPWATCH_TELEMETRY);
+        telemetry_task_handle();
+        profiling_stop(STOPWATCH_TELEMETRY);
 
         profiling_start(SW_COMMAND);
 

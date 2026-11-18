@@ -19,3 +19,5 @@
 ![](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-1.yml/badge.svg)
 
 [![3.1.2 Измерение температуры](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-2.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-2.yml)
+
+[![3.1.3 Телеметрия](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-3.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-3.yml)
