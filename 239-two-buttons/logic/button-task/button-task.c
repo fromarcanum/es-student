@@ -6,7 +6,7 @@
 #include "systime/systime.h"
 
 #define DEBOUNCE_US (20u * 1000u)
-#define LONG_PRESS_US 1000000u
+#define LONG_PRESS_US 1000000
 
 typedef enum
 {
