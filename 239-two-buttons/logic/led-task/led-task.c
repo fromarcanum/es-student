@@ -118,14 +118,14 @@ void led_task_next_period(void)
 {
     switch (led_task_get_period_ms())
     {
-    case 250u:
-        led_task_set_period_ms(500u);
+    case 250:
+        led_task_set_period_ms(500);
         break;
-    case 500u:
-        led_task_set_period_ms(1000u);
+    case 500:
+        led_task_set_period_ms(1000);
         break;
     default:
-        led_task_set_period_ms(250u);
+        led_task_set_period_ms(250);
         break;
     }
 }

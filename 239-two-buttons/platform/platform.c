@@ -3,7 +3,7 @@
 
 // Номера GPIO известны только аппаратному уровню.
 #define LED_GPIO PICO_DEFAULT_LED_PIN
-static const unsigned button_gpio[PLATFORM_BUTTON_COUNT] = {15u, 14u};
+static const unsigned button_gpio[PLATFORM_BUTTON_COUNT] = {15, 14};
 
 void platform_init(void)
 {
