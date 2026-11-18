@@ -14,3 +14,6 @@ bool platform_button_read(void);
 
 // Напряжение на входе АЦП GP26, в вольтах.
 float platform_voltage_read(void);
+
+// Температура встроенного датчика RP2040, градусы Цельсия.
+float platform_temp_read(void);

@@ -1,0 +1,46 @@
+задание: 3.1.2
+проект: 311-adc
+устройство: 2e8a:000a
+серийный номер: E6609103C3662D26
+порт: COM23
+начало: 2026-11-18T15:40:49
+   0.000 -->
+   0.553 --> help
+   0.555 <-- help
+   0.555 <-- help              list of commands
+   0.556 <-- info              device passport
+   0.556 <-- uptime            time since reset
+   0.556 <-- profiling         show timing statistics
+   0.556 <-- profiling_reset   reset timing statistics
+   0.557 <-- led_enable        turn LED on
+   0.557 <-- led_disable       turn LED off
+   0.557 <-- led_blink         blink LED
+   0.558 <-- led_period        set LED period
+   0.558 <-- button            button state and press count
+   0.558 <-- get_voltage       voltage on GP26, ADC input 0
+   0.558 <-- get_temp          chip temperature, degrees Celsius
+   0.614 <-- pi_start          start PI calculation
+   0.614 <-- pi                PI calculation status or result
+   1.610 --> info
+   1.673 <-- info
+   1.674 <-- name: es-adc
+   1.674 <-- version: 1.0.0
+   1.674 <-- project: 311-adc
+   1.674 <-- repo: https://github.com/fromarcanum/es-student
+   1.675 <-- board: pico
+   1.675 <-- serial: E6609103C3662D26
+   1.675 <-- chip: manufacturer 0x927, part 0x0002, revision 1
+   1.675 <-- pico-sdk: 2.3.0
+   2.672 --> get_temp
+   2.733 <-- get_temp
+   2.733 <-- temp: 21.5 C
+   3.723 --> get_temp
+   3.786 <-- get_temp
+   3.787 <-- temp: 22.9 C
+   4.724 --> get_temp
+   4.785 <-- get_temp
+   4.786 <-- temp: 22.9 C
+   5.784 --> get_voltage
+   5.847 <-- get_voltage
+   5.847 <-- voltage: 0.568 V
+итог: отправлено кадров 7, принято строк 32

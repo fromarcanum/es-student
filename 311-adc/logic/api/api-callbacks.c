@@ -184,6 +184,13 @@ static void cmd_get_voltage(const command_t *command)
     printf("voltage: %.3f V\n", (double)platform_voltage_read());
 }
 
+// Измерить температуру кристалла RP2040.
+static void cmd_get_temp(const command_t *command)
+{
+    (void)command;
+    printf("temp: %.1f C\n", (double)platform_temp_read());
+}
+
 static void cmd_pi_start(const command_t *command)
 {
     uint32_t terms = DEFAULT_PI_TERMS;
@@ -253,6 +260,7 @@ const api_command_t api_commands[] = {
     { "led_period", "set LED period", cmd_led_period },
     { "button", "button state and press count", cmd_button },
     { "get_voltage", "voltage on GP26, ADC input 0", cmd_get_voltage },
+    { "get_temp", "chip temperature, degrees Celsius", cmd_get_temp },
     { "pi_start", "start PI calculation", cmd_pi_start },
     { "pi", "PI calculation status or result", cmd_pi }
 };
