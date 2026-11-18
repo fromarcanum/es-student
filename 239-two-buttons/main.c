@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "firmware.h"
 #include "platform/platform.h"
 
@@ -31,9 +33,10 @@ int main(void)
     led_task_init();
     pi_task_init();
 
-    // Связываем кнопку со светодиодом.
-    button_task_init(PLATFORM_BUTTON_1, led_task_next_state);
-    button_task_init(PLATFORM_BUTTON_2, led_task_next_period);
+    // Кнопка 1: короткое на отпускании, долгое (1 с) — мигание.
+    button_task_init(PLATFORM_BUTTON_1, led_task_next_state, led_task_blink);
+    // Кнопка 2: действие сразу при подтверждённом нажатии.
+    button_task_init(PLATFORM_BUTTON_2, led_task_next_period, NULL);
 
     profiling_stopwatch_init(SW_LOOP, "loop");
     profiling_stopwatch_init(SW_COMMAND, "command");

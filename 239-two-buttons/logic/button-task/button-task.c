@@ -6,6 +6,7 @@
 #include "systime/systime.h"
 
 #define DEBOUNCE_US (20u * 1000u)
+#define LONG_PRESS_US (1000u * 1000u)
 
 typedef enum
 {
@@ -19,14 +20,19 @@ typedef struct
 {
     button_state_t state;
     uint64_t transition_us;
+    uint64_t pressed_since_us;
     uint32_t press_count;
+    bool long_press_reported;
     button_task_callback_t on_press_callback;
+    button_task_callback_t on_long_press_callback;
 } button_instance_t;
 
-// Два независимых автомата, одинаковый алгоритм и период подавления дребезга.
+// У каждой кнопки собственный автомат и собственное время удержания.
 static button_instance_t buttons[PLATFORM_BUTTON_COUNT];
 
-void button_task_init(platform_button_t button, button_task_callback_t on_press)
+void button_task_init(platform_button_t button,
+                      button_task_callback_t on_press,
+                      button_task_callback_t on_long_press)
 {
     if ((unsigned)button >= PLATFORM_BUTTON_COUNT)
         return;
@@ -34,8 +40,11 @@ void button_task_init(platform_button_t button, button_task_callback_t on_press)
     button_instance_t *instance = &buttons[button];
     instance->state = BUTTON_RELEASED;
     instance->transition_us = systime_us();
+    instance->pressed_since_us = 0;
     instance->press_count = 0;
+    instance->long_press_reported = false;
     instance->on_press_callback = on_press;
+    instance->on_long_press_callback = on_long_press;
 }
 
 bool button_task_is_pressed(platform_button_t button)
@@ -74,6 +83,7 @@ void button_task_handle(void)
                 instance->state = BUTTON_PRESS_PENDING;
             }
             break;
+
         case BUTTON_PRESS_PENDING:
             if (!pressed)
             {
@@ -82,18 +92,33 @@ void button_task_handle(void)
             else if (now - instance->transition_us >= DEBOUNCE_US)
             {
                 instance->state = BUTTON_PRESSED;
+                instance->pressed_since_us = now;
+                instance->long_press_reported = false;
                 instance->press_count++;
-                if (instance->on_press_callback != NULL)
+
+                // У кнопки без долгого действия событие наступает сразу.
+                if (instance->on_long_press_callback == NULL &&
+                    instance->on_press_callback != NULL)
                     instance->on_press_callback();
             }
             break;
+
         case BUTTON_PRESSED:
             if (!pressed)
             {
                 instance->transition_us = now;
                 instance->state = BUTTON_RELEASE_PENDING;
             }
+            else if (instance->on_long_press_callback != NULL &&
+                     !instance->long_press_reported &&
+                     now - instance->pressed_since_us >= LONG_PRESS_US)
+            {
+                // Флаг выставляем до callback: событие строго однократное.
+                instance->long_press_reported = true;
+                instance->on_long_press_callback();
+            }
             break;
+
         case BUTTON_RELEASE_PENDING:
             if (pressed)
             {
@@ -102,6 +127,12 @@ void button_task_handle(void)
             else if (now - instance->transition_us >= DEBOUNCE_US)
             {
                 instance->state = BUTTON_RELEASED;
+
+                // При долгом действии короткое объявляется лишь при отпускании.
+                if (instance->on_long_press_callback != NULL &&
+                    !instance->long_press_reported &&
+                    instance->on_press_callback != NULL)
+                    instance->on_press_callback();
             }
             break;
         }

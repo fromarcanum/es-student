@@ -13,3 +13,5 @@
 ![2.3.6 Библиотеки](https://github.com/fromarcanum/es-student/actions/workflows/check-2-3-6.yml/badge.svg)
 
 ![2.3.7 Железо и логика](https://github.com/fromarcanum/es-student/actions/workflows/check-2-3-7.yml/badge.svg)
+
+[![2.3.9д Долгое нажатие](https://github.com/fromarcanum/es-student/actions/workflows/check-2-3-9d.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-2-3-9d.yml)
