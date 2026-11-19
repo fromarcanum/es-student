@@ -79,8 +79,7 @@ bool platform_blink_start(uint32_t period_ms)
     platform_blink_stop();
     blink_toggles = 0;
     // Отрицательный период задаёт постоянную сетку с начала предыдущего вызова.
-    blink_running = add_repeating_timer_ms(-(int32_t)period_ms,
-                                           on_blink, NULL, &blink_timer);
+    blink_running = add_repeating_timer_ms(-(int32_t)period_ms, on_blink, NULL, &blink_timer);
     return blink_running;
 }
 
