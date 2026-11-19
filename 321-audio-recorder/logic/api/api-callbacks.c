@@ -183,6 +183,11 @@ static void cmd_button(const command_t *command)
 static void cmd_get_voltage(const command_t *command)
 {
     (void)command;
+    if (platform_adc_busy())
+    {
+        printf("error: adc busy\n");
+        return;
+    }
     printf("voltage: %.3f V\n", (double)platform_voltage_read());
 }
 
@@ -190,6 +195,11 @@ static void cmd_get_voltage(const command_t *command)
 static void cmd_get_temp(const command_t *command)
 {
     (void)command;
+    if (platform_adc_busy())
+    {
+        printf("error: adc busy\n");
+        return;
+    }
     printf("temp: %.1f C\n", (double)platform_temp_read());
 }
 
@@ -214,6 +224,12 @@ static void cmd_tm_start(const command_t *command)
          !parse_u32(command->argv[0], &period_ms)))
     {
         printf("error: usage tm_start [<period_ms>]\n");
+        return;
+    }
+
+    if (platform_adc_busy())
+    {
+        printf("error: adc busy\n");
         return;
     }
 
@@ -261,6 +277,70 @@ static void cmd_timer_blink_stop(const command_t *command)
     (void)command;
     uint32_t count = platform_blink_stop();
     printf("timer_blink: stopped, %u toggles\n", (unsigned)count);
+}
+
+
+// Управление захватом по будильнику. Снимает отсчёты platform, печатает API.
+static void cmd_cap_start(const command_t *command)
+{
+    uint32_t count;
+    uint32_t period_us;
+    if (command->argc != 2 ||
+        !parse_u32(command->argv[0], &count) ||
+        !parse_u32(command->argv[1], &period_us))
+    {
+        printf("error: usage cap_start <N> <period_us>\n");
+        return;
+    }
+
+    if (count == 0 || count > PLATFORM_CAPTURE_MAX || period_us < 10)
+    {
+        printf("error: N must be 1..2000, period_us at least 10\n");
+        return;
+    }
+
+    if (telemetry_task_get_state() == TELEMETRY_STATE_RUN ||
+        platform_adc_busy() || !platform_capture_start(count, period_us))
+    {
+        printf("error: adc busy\n");
+        return;
+    }
+
+    printf("capture: started, %u samples, period %u us\n",
+           (unsigned)count, (unsigned)period_us);
+}
+
+static void cmd_cap_dump(const command_t *command)
+{
+    (void)command;
+    if (platform_adc_busy())
+    {
+        printf("error: capture in progress\n");
+        return;
+    }
+    if (!platform_capture_done())
+    {
+        printf("error: no capture\n");
+        return;
+    }
+
+    platform_capture_t capture;
+    platform_capture_get(&capture);
+    printf("capture: %u samples, period %u us, interval %u..%u us, handler %.1f %%\n",
+           (unsigned)capture.count,
+           (unsigned)capture.period_us,
+           (unsigned)capture.min_interval_us,
+           (unsigned)capture.max_interval_us,
+           (double)capture.handler_percent);
+
+    for (uint32_t i = 0; i < capture.count; ++i)
+    {
+        if (i % 16u == 0)
+            printf("cap:");
+        printf(" %u", (unsigned)capture.samples[i]);
+        if (i % 16u == 15u || i + 1u == capture.count)
+            printf("\n");
+    }
 }
 
 static void cmd_pi_start(const command_t *command)
@@ -337,6 +417,8 @@ const api_command_t api_commands[] = {
     { "tm_stop", "stop telemetry", cmd_tm_stop },
     { "timer_blink_start", "blink led by timer: timer_blink_start <period_ms>", cmd_timer_blink_start },
     { "timer_blink_stop", "stop timer blink, number of toggles", cmd_timer_blink_stop },
+    { "cap_start", "capture ADC by timer: cap_start <N> <period_us>", cmd_cap_start },
+    { "cap_dump", "dump ADC capture and timing", cmd_cap_dump },
     { "pi_start", "start PI calculation", cmd_pi_start },
     { "pi", "PI calculation status or result", cmd_pi }
 };
