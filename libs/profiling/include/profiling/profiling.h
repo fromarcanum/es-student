@@ -11,7 +11,7 @@
 // Сумма замеров хранится в uint32_t. Переполнение возможно
 // примерно через 71 минуту накопленного времени замеров.
 
-#define PROFILING_STOPWATCH_COUNT 5u
+#define PROFILING_STOPWATCH_COUNT 8u
 
 typedef struct
 {
