@@ -1,0 +1,75 @@
+задание: 3.2.1
+проект: 321-audio-recorder
+устройство: 2e8a:000a
+серийный номер: E6609103C3662D26
+порт: COM23
+начало: 2026-11-19T11:02:52
+   0.000 -->
+   0.556 --> help
+   0.557 <-- help
+   0.558 <-- help              list of commands
+   0.558 <-- info              device passport
+   0.558 <-- uptime            time since reset
+   0.558 <-- profiling         show timing statistics
+   0.559 <-- profiling_reset   reset timing statistics
+   0.559 <-- led_enable        turn LED on
+   0.559 <-- led_disable       turn LED off
+   0.560 <-- led_blink         blink LED
+   0.560 <-- led_period        set LED period
+   0.560 <-- button            button state and press count
+   0.560 <-- get_voltage       voltage on GP26, ADC input 0
+   0.561 <-- get_temp          chip temperature, degrees Celsius
+   0.561 <-- tm_start          start telemetry [period_ms]
+   0.561 <-- tm_stop           stop telemetry
+   0.562 <-- timer_blink_start blink led by timer: timer_blink_start <period_ms>
+   0.562 <-- timer_blink_stop  stop timer blink, number of toggles
+   0.562 <-- pi_start          start PI calculation
+   0.619 <-- pi                PI calculation status or result
+   1.618 --> info
+   1.681 <-- info
+   1.681 <-- name: es-recorder
+   1.682 <-- version: 1.0.0
+   1.682 <-- project: 321-audio-recorder
+   1.682 <-- repo: https://github.com/fromarcanum/es-student
+   1.682 <-- board: pico
+   1.683 <-- serial: E6609103C3662D26
+   1.683 <-- chip: manufacturer 0x927, part 0x0002, revision 1
+   1.683 <-- pico-sdk: 2.3.0
+   2.620 --> timer_blink_start 250
+   2.683 <-- timer_blink_start 250
+   2.683 <-- timer_blink: started, period 250 ms
+   3.682 --> pi_start 3000000
+   3.745 <-- pi_start 3000000
+   3.746 <-- pi: started, 3000000 terms
+   4.686 --> uptime
+   4.750 <-- uptime
+   4.750 <-- uptime: 19665 ms
+   5.687 --> info
+   5.751 <-- info
+   5.752 <-- name: es-recorder
+   5.752 <-- version: 1.0.0
+   5.752 <-- project: 321-audio-recorder
+   5.752 <-- repo: https://github.com/fromarcanum/es-student
+   5.753 <-- board: pico
+   5.753 <-- serial: E6609103C3662D26
+   5.753 <-- chip: manufacturer 0x927, part 0x0002, revision 1
+   5.753 <-- pico-sdk: 2.3.0
+   6.689 --> pi
+   6.750 <-- pi
+   6.751 <-- pi: running
+   8.698 --> timer_blink_stop
+   8.761 <-- timer_blink_stop
+   8.762 <-- timer_blink: stopped, 24 toggles
+   9.710 --> timer_blink_start 100
+   9.773 <-- timer_blink_start 100
+   9.774 <-- timer_blink: started, period 100 ms
+  11.721 --> timer_blink_stop
+  11.783 <-- timer_blink_stop
+  11.783 <-- timer_blink: stopped, 20 toggles
+  12.726 --> timer_blink_start 5
+  12.788 <-- timer_blink_start 5
+  12.789 <-- error: period_ms must be 10..60000
+  13.228 --> timer_blink_start
+  13.290 <-- timer_blink_start
+  13.291 <-- error: usage timer_blink_start <period_ms>
+итог: отправлено кадров 13, принято строк 55

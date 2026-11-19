@@ -23,3 +23,5 @@
 [![3.1.3 Телеметрия](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-3.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-3.yml)
 
 [![3.1.4 Считывание данных в Python](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-4.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-4.yml)
+
+[![3.2.1 Индикатор записи](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-1.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-1.yml)
