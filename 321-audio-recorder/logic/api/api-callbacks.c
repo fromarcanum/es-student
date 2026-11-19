@@ -438,6 +438,47 @@ static void cmd_stream_stop(const command_t *command)
            (unsigned)stream_task_get_overruns());
 }
 
+// Проверка watchdog: команды уровня API, без зависимости от Pico SDK.
+static void cmd_wdt_enable(const command_t *command)
+{
+    uint32_t timeout_ms;
+    if (command->argc != 1 ||
+        !parse_u32(command->argv[0], &timeout_ms))
+    {
+        printf("error: usage wdt_enable <timeout_ms>\n");
+        return;
+    }
+
+    if (!platform_watchdog_enable(timeout_ms))
+    {
+        printf("error: timeout_ms must be 1..8388\n");
+        return;
+    }
+    printf("wdt: enabled, timeout %u ms\n", (unsigned)timeout_ms);
+}
+
+static void cmd_hang(const command_t *command)
+{
+    (void)command;
+    printf("hang: superloop stopped\n");
+    fflush(stdout);
+
+    // Прерывания продолжаются; суперцикл больше не дойдёт до feed.
+    while (1)
+    {
+        __asm__ volatile ("" ::: "memory");
+    }
+}
+
+static void cmd_reset_reason(const command_t *command)
+{
+    (void)command;
+    uint32_t restarts = 0;
+    bool was_watchdog = platform_watchdog_caused_reset(&restarts);
+    printf("reset: %s, restarts %u\n",
+           was_watchdog ? "watchdog" : "other", (unsigned)restarts);
+}
+
 static void cmd_pi_start(const command_t *command)
 {
     uint32_t terms = DEFAULT_PI_TERMS;
@@ -517,6 +558,9 @@ const api_command_t api_commands[] = {
     { "dma_cap", "DMA block capture: dma_cap <N>", cmd_dma_cap },
     { "stream_start", "start ADC stream [8|16]", cmd_stream_start },
     { "stream_stop", "stop ADC stream", cmd_stream_stop },
+    { "wdt_enable", "enable watchdog: wdt_enable <timeout_ms>", cmd_wdt_enable },
+    { "hang", "test watchdog by stopping superloop", cmd_hang },
+    { "reset_reason", "last reset reason and watchdog restarts", cmd_reset_reason },
     { "pi_start", "start PI calculation", cmd_pi_start },
     { "pi", "PI calculation status or result", cmd_pi }
 };

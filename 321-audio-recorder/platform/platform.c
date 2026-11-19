@@ -5,6 +5,8 @@
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
+#include "hardware/watchdog.h"
+#include "hardware/structs/watchdog.h"
 
 // Только platform знает номера выводов и SDK.
 #define LED_GPIO PICO_DEFAULT_LED_PIN
@@ -14,6 +16,10 @@
 #define ADC_TEMP_CHANNEL 4
 #define ADC_VREF_V 3.3f
 #define ADC_LEVELS 4096
+#define WATCHDOG_MAX_MS 8388u
+
+static bool watchdog_reset;
+static uint32_t watchdog_restarts;
 
 // SDK хранит состояние таймера здесь, пока он активен.
 static repeating_timer_t blink_timer;
@@ -138,6 +144,14 @@ static void on_block_done(void)
 
 void platform_init(void)
 {
+    // Причину сброса проверяем ДО инициализации периферии.
+    watchdog_reset = watchdog_enable_caused_reboot();
+    if (watchdog_reset)
+        watchdog_hw->scratch[0]++;
+    else
+        watchdog_hw->scratch[0] = 0;
+    watchdog_restarts = watchdog_hw->scratch[0];
+
     stdio_init_all();
 
     gpio_init(LED_GPIO);
@@ -413,4 +427,26 @@ void platform_write(const void *data, uint32_t bytes)
 {
     // Бинарные данные: false, false исключает преобразование LF в CRLF.
     stdio_put_string((const char *)data, (int)bytes, false, false);
+}
+
+// Обновление разрешено только из суперцикла, не из обработчиков IRQ.
+bool platform_watchdog_enable(uint32_t timeout_ms)
+{
+    if (timeout_ms == 0 || timeout_ms > WATCHDOG_MAX_MS)
+        return false;
+
+    watchdog_enable(timeout_ms, true);
+    return true;
+}
+
+void platform_watchdog_feed(void)
+{
+    watchdog_update();
+}
+
+bool platform_watchdog_caused_reset(uint32_t *restarts)
+{
+    if (restarts != NULL)
+        *restarts = watchdog_restarts;
+    return watchdog_reset;
 }

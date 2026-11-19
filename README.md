@@ -31,3 +31,5 @@
 [![3.2.3 Захват блока через DMA](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-3.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-3.yml)
 
 [![3.2.4 Поток с двойной буферизацией](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-4.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-4.yml)
+
+[![3.2.6 Сторожевой таймер](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-6.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-6.yml)

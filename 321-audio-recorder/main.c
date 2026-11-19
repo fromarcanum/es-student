@@ -88,6 +88,9 @@ int main(void)
             api_handle(command);
 
         profiling_stop(SW_COMMAND);
+
+        // Все задачи суперцикла завершились — можно обновить watchdog.
+        platform_watchdog_feed();
         profiling_stop(SW_LOOP);
     }
 }
