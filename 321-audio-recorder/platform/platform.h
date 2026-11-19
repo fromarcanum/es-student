@@ -33,3 +33,13 @@ typedef struct {
 } platform_capture_t;
 
 void platform_capture_get(platform_capture_t *capture);
+
+// 44 100 отсчётов АЦП в секунду, буфер из 8192 uint16_t.
+#define PLATFORM_SAMPLE_RATE_HZ 44100
+#define PLATFORM_BLOCK_MAX 8192
+
+// Возвращает false при занятости АЦП или неверном числе отсчётов.
+bool platform_block_start(uint32_t count);
+bool platform_block_done(void);
+const uint16_t *platform_block_samples(void);
+uint32_t platform_block_time_us(void);

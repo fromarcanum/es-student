@@ -15,6 +15,8 @@
 #include "led-task/led-task.h"
 #include "button-task/button-task.h"
 #include "pi-task/pi-task.h"
+#include "telemetry-task/telemetry-task.h"
+#include "block-task/block-task.h"
 #include "platform/platform.h"
 
 #define DEFAULT_PI_TERMS 1000000u
@@ -343,6 +345,51 @@ static void cmd_cap_dump(const command_t *command)
     }
 }
 
+
+// Печать принадлежит API; задача только передаёт адрес блока и измеренное время.
+static void print_dma_cap(const uint16_t *samples, uint32_t count, uint32_t time_us)
+{
+    uint16_t min_code = UINT16_MAX;
+    uint16_t max_code = 0;
+    uint64_t sum = 0;
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        uint16_t code = samples[i];
+        if (code < min_code)
+            min_code = code;
+        if (code > max_code)
+            max_code = code;
+        sum += code;
+    }
+
+    uint32_t expected_us = (uint32_t)((uint64_t)count * 1000000u / PLATFORM_SAMPLE_RATE_HZ);
+    printf("dma_cap: %u samples in %u us, expected %u us, min %u max %u mean %.1f\n",
+           (unsigned)count, (unsigned)time_us, (unsigned)expected_us,
+           (unsigned)min_code, (unsigned)max_code, (double)sum / (double)count);
+}
+
+static void cmd_dma_cap(const command_t *command)
+{
+    uint32_t count;
+    if (command->argc != 1 || !parse_u32(command->argv[0], &count))
+    {
+        printf("error: usage dma_cap <N>\n");
+        return;
+    }
+    if (count == 0 || count > PLATFORM_BLOCK_MAX)
+    {
+        printf("error: N must be 1..8192\n");
+        return;
+    }
+    if (telemetry_task_get_state() == TELEMETRY_STATE_RUN ||
+        platform_adc_busy() || !block_task_start(count, print_dma_cap))
+    {
+        printf("error: adc busy\n");
+        return;
+    }
+    // Ничего не ждём: ответ появится при следующем block_task_handle().
+}
+
 static void cmd_pi_start(const command_t *command)
 {
     uint32_t terms = DEFAULT_PI_TERMS;
@@ -419,6 +466,7 @@ const api_command_t api_commands[] = {
     { "timer_blink_stop", "stop timer blink, number of toggles", cmd_timer_blink_stop },
     { "cap_start", "capture ADC by timer: cap_start <N> <period_us>", cmd_cap_start },
     { "cap_dump", "dump ADC capture and timing", cmd_cap_dump },
+    { "dma_cap", "DMA block capture: dma_cap <N>", cmd_dma_cap },
     { "pi_start", "start PI calculation", cmd_pi_start },
     { "pi", "PI calculation status or result", cmd_pi }
 };

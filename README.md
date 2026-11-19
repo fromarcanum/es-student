@@ -27,3 +27,5 @@
 [![3.2.1 Индикатор записи](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-1.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-1.yml)
 
 [![3.2.2 Захват по таймеру](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-2.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-2.yml)
+
+[![3.2.3 Захват блока через DMA](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-3.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-3.yml)

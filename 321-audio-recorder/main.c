@@ -10,6 +10,7 @@
 #include "button-task/button-task.h"
 #include "pi-task/pi-task.h"
 #include "telemetry-task/telemetry-task.h"
+#include "block-task/block-task.h"
 
 typedef enum
 {
@@ -18,7 +19,8 @@ typedef enum
     SW_LED,
     SW_BUTTON,
     SW_PI,
-    STOPWATCH_TELEMETRY
+    STOPWATCH_TELEMETRY,
+    STOPWATCH_BLOCK
 } stopwatch_id_t;
 
 int main(void)
@@ -43,6 +45,7 @@ int main(void)
     profiling_stopwatch_init(SW_BUTTON, "button");
     profiling_stopwatch_init(SW_PI, "pi");
     profiling_stopwatch_init(STOPWATCH_TELEMETRY, "telemetry");
+    profiling_stopwatch_init(STOPWATCH_BLOCK, "block");
 
     while (1)
     {
@@ -63,6 +66,10 @@ int main(void)
         profiling_start(STOPWATCH_TELEMETRY);
         telemetry_task_handle();
         profiling_stop(STOPWATCH_TELEMETRY);
+
+        profiling_start(STOPWATCH_BLOCK);
+        block_task_handle();
+        profiling_stop(STOPWATCH_BLOCK);
 
         profiling_start(SW_COMMAND);
 
