@@ -6,6 +6,8 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/watchdog.h"
+#include "hardware/pwm.h"
+#include "hardware/clocks.h"
 #include "hardware/structs/watchdog.h"
 
 // Только platform знает номера выводов и SDK.
@@ -17,6 +19,10 @@
 #define ADC_VREF_V 3.3f
 #define ADC_LEVELS 4096
 #define WATCHDOG_MAX_MS 8388u
+// Генератор тестового меандра на GP20, отдельный блок PWM.
+#define TONE_PIN 20
+#define TONE_COUNT_HZ 1000000u
+static uint32_t tone_slice;
 
 static bool watchdog_reset;
 static uint32_t watchdog_restarts;
@@ -161,6 +167,16 @@ void platform_init(void)
     gpio_init(BUTTON_GPIO);
     gpio_set_dir(BUTTON_GPIO, GPIO_IN);
     gpio_pull_up(BUTTON_GPIO);
+
+    // PWM на GP20: счетчик тикает 1 миллион раз в секунду.
+    // При выключенном тоне compare=0, поэтому GP20 удерживает логический 0.
+    gpio_set_function(TONE_PIN, GPIO_FUNC_PWM);
+    tone_slice = pwm_gpio_to_slice_num(TONE_PIN);
+    pwm_set_clkdiv(tone_slice,
+                   (float)clock_get_hz(clk_sys) / (float)TONE_COUNT_HZ);
+    pwm_set_wrap(tone_slice, 999u);
+    pwm_set_gpio_level(TONE_PIN, 0u);
+    pwm_set_enabled(tone_slice, true);
 
     adc_init();
     adc_gpio_init(ADC_PIN);
@@ -449,4 +465,22 @@ bool platform_watchdog_caused_reset(uint32_t *restarts)
     if (restarts != NULL)
         *restarts = watchdog_restarts;
     return watchdog_reset;
+}
+
+// 20..20000 Гц; частота делит счетчик 1 МГц, поэтому TOP+1 — период в мкс.
+// 0 не останавливает PWM: уровень GP20 равен 0, следующая нота стартует сразу.
+bool platform_tone_set(uint32_t freq_hz)
+{
+    if (freq_hz == 0u)
+    {
+        pwm_set_gpio_level(TONE_PIN, 0u);
+        return true;
+    }
+    if (freq_hz < 20u || freq_hz > 20000u)
+        return false;
+
+    uint32_t period_us = TONE_COUNT_HZ / freq_hz;
+    pwm_set_wrap(tone_slice, (uint16_t)(period_us - 1u));
+    pwm_set_gpio_level(TONE_PIN, (uint16_t)(period_us / 2u));
+    return true;
 }

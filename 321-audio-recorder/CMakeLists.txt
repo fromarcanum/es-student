@@ -36,6 +36,8 @@ target_link_libraries(platform PRIVATE
     hardware_adc
     hardware_dma
     hardware_watchdog
+    hardware_pwm
+    hardware_clocks
 )
 
 # Логика прибора — без Pico SDK.

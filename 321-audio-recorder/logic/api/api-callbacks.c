@@ -479,6 +479,29 @@ static void cmd_reset_reason(const command_t *command)
            was_watchdog ? "watchdog" : "other", (unsigned)restarts);
 }
 
+// Генерация тона делегирована аппаратной платформе; логика не использует SDK.
+static void cmd_generate_tone(const command_t *command)
+{
+    uint32_t freq_hz;
+    if (command->argc != 1 ||
+        !parse_u32(command->argv[0], &freq_hz))
+    {
+        printf("error: usage generate_tone <Hz>\n");
+        return;
+    }
+
+    if (!platform_tone_set(freq_hz))
+    {
+        printf("error: Hz must be 0 or 20..20000\n");
+        return;
+    }
+
+    if (freq_hz == 0u)
+        printf("tone: off\n");
+    else
+        printf("tone: %u Hz\n", (unsigned)freq_hz);
+}
+
 static void cmd_pi_start(const command_t *command)
 {
     uint32_t terms = DEFAULT_PI_TERMS;
@@ -561,6 +584,7 @@ const api_command_t api_commands[] = {
     { "wdt_enable", "enable watchdog: wdt_enable <timeout_ms>", cmd_wdt_enable },
     { "hang", "test watchdog by stopping superloop", cmd_hang },
     { "reset_reason", "last reset reason and watchdog restarts", cmd_reset_reason },
+    { "generate_tone", "set PWM tone: generate_tone <Hz>", cmd_generate_tone },
     { "pi_start", "start PI calculation", cmd_pi_start },
     { "pi", "PI calculation status or result", cmd_pi }
 };

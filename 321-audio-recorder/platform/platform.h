@@ -58,3 +58,7 @@ bool platform_watchdog_enable(uint32_t timeout_ms);
 void platform_watchdog_feed(void);
 // Причина прошлого сброса и число последовательных перезапусков.
 bool platform_watchdog_caused_reset(uint32_t *restarts);
+
+// Аппаратный PWM на GP20, 1 МГц счетчика. 0 — выход в нуле.
+// Допустимы 0 и 20..20000 Гц; false означает неверную частоту.
+bool platform_tone_set(uint32_t freq_hz);

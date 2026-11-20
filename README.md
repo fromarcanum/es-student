@@ -33,3 +33,5 @@
 [![3.2.4 Поток с двойной буферизацией](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-4.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-4.yml)
 
 [![3.2.6 Сторожевой таймер](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-6.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-6.yml)
+
+[![3.2.5 Запись испытательного сигнала](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-5.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-2-5.yml)
