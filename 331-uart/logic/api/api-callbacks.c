@@ -411,6 +411,34 @@ static void cmd_parity(const command_t *command)
     printf("parity: uart0 %s, uart1 %s\n", command->argv[0],command->argv[1]);
 }
 
+#define BLOCK_SIZE 64
+static uint8_t block_data[BLOCK_SIZE];
+static bool block_irq_enabled;
+static void print_block(const uint8_t *data, size_t size, uint32_t errors)
+{
+    platform_uart_rx_irq_set(false);
+    bool match = size > 0 && size <= BLOCK_SIZE && memcmp(data, block_data, size) == 0;
+    printf("block %s: %u/64 %s, ", block_irq_enabled ? "irq" : "poll",
+           (unsigned)size, match ? "match" : "mismatch");
+    print_errors(errors);
+}
+
+static void cmd_block(const command_t *command)
+{
+    if (command->argc != 1 ||
+        (strcmp(command->argv[0], "irq") && strcmp(command->argv[0], "poll"))) {
+        printf("error: usage block irq|poll\n"); return;
+    }
+    for (size_t i=0; i<BLOCK_SIZE; ++i) block_data[i] = (uint8_t)i;
+    block_irq_enabled = strcmp(command->argv[0], "irq") == 0;
+    platform_uart_rx_irq_set(block_irq_enabled);
+    if (!uart_task_start(PLATFORM_UART1, PLATFORM_UART0,
+                         block_data, BLOCK_SIZE, print_block)) {
+        platform_uart_rx_irq_set(false);
+        printf("error: uart is busy\n");
+    }
+}
+
 const api_command_t api_commands[] = {
     { "info", "device passport", cmd_info },
     { "uptime", "time since reset", cmd_uptime },
@@ -422,6 +450,7 @@ const api_command_t api_commands[] = {
     { "led_period", "set LED period", cmd_led_period },
     { "button", "button state and press count", cmd_button },
     { "edge", "rise and fall of the RC line: edge pp|od", cmd_edge },
+    { "block", "64 bytes from UART1 to UART0: block irq|poll", cmd_block },
     { "link", "text from UART0 to UART1 and back: link <text>", cmd_link },
     { "baud_shift", "shift UART1 baud rate: baud_shift <percent>", cmd_baud_shift },
     { "text", "32 characters from UART1 to UART0", cmd_text },

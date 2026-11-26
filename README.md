@@ -41,3 +41,5 @@
 [![3.1.5 Исследование RC-цепи](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-5.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-1-5.yml)
 
 [![3.3.3 Два модуля и допуск скорости](https://github.com/fromarcanum/es-student/actions/workflows/check-3-3-3.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-3-3.yml)
+
+[![3.3.4 Приём блока](https://github.com/fromarcanum/es-student/actions/workflows/check-3-3-4.yml/badge.svg)](https://github.com/fromarcanum/es-student/actions/workflows/check-3-3-4.yml)

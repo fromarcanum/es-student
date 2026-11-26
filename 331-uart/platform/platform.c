@@ -4,6 +4,7 @@
 #include "hardware/adc.h"
 #include "hardware/uart.h"
 #include "hardware/regs/uart.h"
+#include "hardware/irq.h"
 
 // Только platform знает номера выводов.
 #define LED_GPIO PICO_DEFAULT_LED_PIN
@@ -18,6 +19,18 @@
 #define UART_BAUD 115200u
 #define UART1_TX_PIN 8u
 #define UART1_RX_PIN 9u
+#define RX_BUFFER_SIZE 128
+static volatile uint8_t rx_buffer[RX_BUFFER_SIZE];
+static volatile uint32_t rx_count;
+
+static void on_uart0_rx(void)
+{
+    while (uart_is_readable(uart0)) {
+        uint8_t byte = uart_get_hw(uart0)->dr & 0xffu;
+        if (rx_count < RX_BUFFER_SIZE) rx_buffer[rx_count++] = byte;
+    }
+}
+
 
 // Опорное напряжение и число уровней 12-разрядного АЦП.
 #define ADC_VREF_V 3.3f
@@ -46,6 +59,8 @@ void platform_init(void)
     uart_init(uart1, UART_BAUD);
     gpio_set_function(UART1_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART1_RX_PIN, GPIO_FUNC_UART);
+    irq_set_exclusive_handler(UART0_IRQ, on_uart0_rx);
+    irq_set_enabled(UART0_IRQ, true);
 }
 
 void platform_led_set(bool on)
@@ -107,6 +122,7 @@ void platform_uart_clear(platform_uart_t uart)
     while (uart_is_readable(u))
         (void)uart_get_hw(u)->dr;
     uart_get_hw(u)->rsr = 0; // UARTECR: сброс ошибок
+    if (uart == PLATFORM_UART0) rx_count = 0;
 }
 
 bool platform_uart_put(platform_uart_t uart, uint8_t byte)
@@ -126,6 +142,13 @@ size_t platform_uart_read(platform_uart_t uart, uint8_t *data, size_t size)
 {
     uart_inst_t *u = uart_of(uart);
     size_t n = 0;
+    if (uart == PLATFORM_UART0) {
+        while (n < size && n < rx_count) {
+            data[n] = rx_buffer[n];
+            n++;
+        }
+        rx_count = 0;
+    }
     while (n < size && uart_is_readable(u))
         data[n++] = uart_get_hw(u)->dr & 0xff;
     return n;
@@ -147,4 +170,9 @@ void platform_uart_parity_set(platform_uart_t uart, platform_parity_t parity)
         UART_PARITY_NONE, UART_PARITY_EVEN, UART_PARITY_ODD
     };
     uart_set_format(uart_of(uart), 8, 1, parities[parity]);
+}
+
+void platform_uart_rx_irq_set(bool on)
+{
+    uart_set_irqs_enabled(uart0, on, false);
 }
