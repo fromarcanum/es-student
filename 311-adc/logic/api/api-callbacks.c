@@ -233,6 +233,20 @@ static void cmd_tm_stop(const command_t *command)
     printf("telemetry: stopped\n");
 }
 
+static void cmd_charge_on(const command_t *command)
+{
+    (void)command;
+    platform_charge_set(true);
+    printf("charge: on\n");
+}
+
+static void cmd_charge_off(const command_t *command)
+{
+    (void)command;
+    platform_charge_set(false);
+    printf("charge: off\n");
+}
+
 static void cmd_pi_start(const command_t *command)
 {
     uint32_t terms = DEFAULT_PI_TERMS;
@@ -303,6 +317,8 @@ const api_command_t api_commands[] = {
     { "button", "button state and press count", cmd_button },
     { "get_voltage", "voltage on GP26, ADC input 0", cmd_get_voltage },
     { "get_temp", "chip temperature, degrees Celsius", cmd_get_temp },
+    { "charge_on", "charge RC circuit", cmd_charge_on },
+    { "charge_off", "discharge RC circuit", cmd_charge_off },
     { "tm_start", "start telemetry [period_ms]", cmd_tm_start },
     { "tm_stop", "stop telemetry", cmd_tm_stop },
     { "pi_start", "start PI calculation", cmd_pi_start },

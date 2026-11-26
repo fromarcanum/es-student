@@ -17,3 +17,6 @@ float platform_voltage_read(void);
 
 // Температура встроенного датчика RP2040, градусы Цельсия.
 float platform_temp_read(void);
+
+// Drive the RC circuit from GP22: true = 3.3 V, false = 0 V.
+void platform_charge_set(bool on);

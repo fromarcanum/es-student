@@ -7,6 +7,9 @@
 #define LED_GPIO PICO_DEFAULT_LED_PIN
 #define BUTTON_GPIO 15u
 
+// GP22 charges or discharges the RC circuit.
+#define CHARGE_PIN 22u
+
 // Вход АЦП: вывод GP26, канал 0.
 #define ADC_PIN 26
 #define ADC_CHANNEL 0
@@ -27,6 +30,11 @@ void platform_init(void)
     gpio_init(BUTTON_GPIO);
     gpio_set_dir(BUTTON_GPIO, GPIO_IN);
     gpio_pull_up(BUTTON_GPIO);
+
+    // Default to zero before enabling GP22 output.
+    gpio_init(CHARGE_PIN);
+    gpio_put(CHARGE_PIN, false);
+    gpio_set_dir(CHARGE_PIN, GPIO_OUT);
 
     adc_init();
     adc_gpio_init(ADC_PIN);
@@ -56,4 +64,10 @@ float platform_temp_read(void)
     adc_select_input(ADC_TEMP_CHANNEL);
     float voltage = adc_read() * ADC_VREF_V / ADC_LEVELS;
     return 27.0f - (voltage - 0.706f) / 0.001721f;
+}
+
+// Charge the capacitor through a resistor, or discharge it to ground.
+void platform_charge_set(bool on)
+{
+    gpio_put(CHARGE_PIN, on);
 }
