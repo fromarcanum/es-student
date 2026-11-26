@@ -327,6 +327,90 @@ static void cmd_echo(const command_t *command)
         printf("error: uart is busy\n");
 }
 
+static const char text_line[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+#define LINK_MAX 32
+
+static void print_link_back(const uint8_t *data, size_t size, uint32_t errors)
+{
+    printf("1->0: "); print_bytes(data, size); putchar(' '); print_errors(errors);
+}
+
+static void print_link_forth(const uint8_t *data, size_t size, uint32_t errors)
+{
+    printf("0->1: "); print_bytes(data, size); putchar(' '); print_errors(errors);
+    if (size && !uart_task_start(PLATFORM_UART1, PLATFORM_UART0, data, size, print_link_back))
+        printf("error: uart is busy\n");
+}
+
+static void cmd_link(const command_t *command)
+{
+    if (command->argc != 1 || !command->argv[0][0]) {
+        printf("error: usage link <text>\n"); return;
+    }
+    size_t size = strlen(command->argv[0]);
+    if (size > LINK_MAX) { printf("error: text longer than 32\n"); return; }
+    if (!uart_task_start(PLATFORM_UART0, PLATFORM_UART1,
+                         (const uint8_t *)command->argv[0], size, print_link_forth))
+        printf("error: uart is busy\n");
+}
+
+static void cmd_baud_shift(const command_t *command)
+{
+    if (command->argc != 1 || !command->argv[0][0]) {
+        printf("error: usage baud_shift <percent>\n"); return;
+    }
+    char *end;
+    errno = 0;
+    long percent = strtol(command->argv[0], &end, 10);
+    if (*end != '\0' || errno == ERANGE) {
+        printf("error: usage baud_shift <percent>\n"); return;
+    }
+    if (percent < -50 || percent > 50) {
+        printf("error: percent must be -50..50\n"); return;
+    }
+    uint32_t baud = 115200u * (uint32_t)(100 + percent) / 100u;
+    uint32_t actual = platform_uart_baud_set(PLATFORM_UART1, baud);
+    printf("baud_shift: uart1 %u baud\n", (unsigned)actual);
+}
+
+static void print_text(const uint8_t *data, size_t size, uint32_t errors)
+{
+    printf("text: %u chars ", (unsigned)size);
+    print_bytes(data, size);
+    putchar(' ');
+    print_errors(errors);
+}
+
+static void cmd_text(const command_t *command)
+{
+    if (command->argc) { printf("error: usage text\n"); return; }
+    if (!uart_task_start(PLATFORM_UART1, PLATFORM_UART0,
+             (const uint8_t *)text_line, sizeof(text_line)-1, print_text))
+        printf("error: uart is busy\n");
+}
+
+static bool parse_parity(const char *value, platform_parity_t *out)
+{
+    if (!strcmp(value, "none")) *out = PLATFORM_PARITY_NONE;
+    else if (!strcmp(value, "even")) *out = PLATFORM_PARITY_EVEN;
+    else if (!strcmp(value, "odd")) *out = PLATFORM_PARITY_ODD;
+    else return false;
+    return true;
+}
+
+static void cmd_parity(const command_t *command)
+{
+    platform_parity_t rx, tx;
+    if (command->argc != 2 ||
+        !parse_parity(command->argv[0], &rx) ||
+        !parse_parity(command->argv[1], &tx)) {
+        printf("error: usage parity none|even|odd none|even|odd\n"); return;
+    }
+    platform_uart_parity_set(PLATFORM_UART0, rx);
+    platform_uart_parity_set(PLATFORM_UART1, tx);
+    printf("parity: uart0 %s, uart1 %s\n", command->argv[0],command->argv[1]);
+}
+
 const api_command_t api_commands[] = {
     { "info", "device passport", cmd_info },
     { "uptime", "time since reset", cmd_uptime },
@@ -338,6 +422,10 @@ const api_command_t api_commands[] = {
     { "led_period", "set LED period", cmd_led_period },
     { "button", "button state and press count", cmd_button },
     { "edge", "rise and fall of the RC line: edge pp|od", cmd_edge },
+    { "link", "text from UART0 to UART1 and back: link <text>", cmd_link },
+    { "baud_shift", "shift UART1 baud rate: baud_shift <percent>", cmd_baud_shift },
+    { "text", "32 characters from UART1 to UART0", cmd_text },
+    { "parity", "parity of UART0 and UART1: parity <rx> <tx>", cmd_parity },
     { "loop", "UART0 loopback: loop internal|pins", cmd_loop },
     { "echo", "text through UART0 and back: echo <text>", cmd_echo },
     { "pi_start", "start PI calculation", cmd_pi_start },
