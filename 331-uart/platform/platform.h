@@ -1,0 +1,44 @@
+#pragma once
+
+#include <stdbool.h>
+
+// Запуск USB и настройка GPIO и АЦП.
+void platform_init(void);
+
+// Установить состояние светодиода.
+void platform_led_set(bool on);
+
+// Получить логическое состояние кнопки:
+// true — нажата, false — отпущена.
+bool platform_button_read(void);
+
+// Напряжение на входе АЦП GP26, в вольтах.
+float platform_voltage_read(void);
+
+
+// Режим выхода GP22, управляющего RC-линией.
+typedef enum {
+    PLATFORM_LINE_PUSH_PULL,
+    PLATFORM_LINE_OPEN_DRAIN,
+} platform_line_mode_t;
+
+// Двухтактный выход: low/high. Открытый сток: low/отпущена линия.
+void platform_line_set(platform_line_mode_t mode, bool high);
+
+// Низкоуровневый интерфейс UART; только platform обращается к Pico SDK.
+#include <stddef.h>
+#include <stdint.h>
+typedef enum {
+    PLATFORM_UART0,
+    PLATFORM_UART1,
+} platform_uart_t;
+#define PLATFORM_UART_FE 0x1u
+#define PLATFORM_UART_PE 0x2u
+#define PLATFORM_UART_BE 0x4u
+#define PLATFORM_UART_OE 0x8u
+void platform_uart_loop_set(bool internal);
+void platform_uart_clear(platform_uart_t uart);
+bool platform_uart_put(platform_uart_t uart, uint8_t byte);
+bool platform_uart_busy(platform_uart_t uart);
+size_t platform_uart_read(platform_uart_t uart, uint8_t *data, size_t size);
+uint32_t platform_uart_errors(platform_uart_t uart);
