@@ -9,3 +9,6 @@ typedef void (*uart_task_callback_t)(const uint8_t *data, size_t size, uint32_t 
 bool uart_task_start(platform_uart_t tx, platform_uart_t rx,
                      const uint8_t *data, size_t size, uart_task_callback_t on_done);
 void uart_task_handle(void);
+
+// Текущий обмен ещё выполняется (защита одновременных команд scope).
+bool uart_task_busy(void);

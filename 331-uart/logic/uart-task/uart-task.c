@@ -52,3 +52,8 @@ void uart_task_handle(void)
         break;
     }
 }
+
+bool uart_task_busy(void)
+{
+    return state != UART_STATE_IDLE;
+}

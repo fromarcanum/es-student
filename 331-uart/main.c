@@ -10,6 +10,7 @@
 #include "pi-task/pi-task.h"
 #include "edge-task/edge-task.h"
 #include "uart-task/uart-task.h"
+#include "block-task/block-task.h"
 
 typedef enum
 {
@@ -19,7 +20,8 @@ typedef enum
     SW_BUTTON,
     SW_PI,
     SW_EDGE,
-    SW_UART
+    SW_UART,
+    SW_BLOCK
 } stopwatch_id_t;
 
 int main(void)
@@ -42,6 +44,7 @@ int main(void)
     profiling_stopwatch_init(SW_PI, "pi");
     profiling_stopwatch_init(SW_EDGE, "edge");
     profiling_stopwatch_init(SW_UART, "uart");
+    profiling_stopwatch_init(SW_BLOCK, "block");
 
     while (1)
     {
@@ -66,6 +69,10 @@ int main(void)
         profiling_start(SW_UART);
         uart_task_handle();
         profiling_stop(SW_UART);
+
+        profiling_start(SW_BLOCK);
+        block_task_handle();
+        profiling_stop(SW_BLOCK);
 
         profiling_start(SW_COMMAND);
         const command_t *command = stdio_text_protocol_handle();

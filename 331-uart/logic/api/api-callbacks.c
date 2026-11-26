@@ -18,6 +18,7 @@
 #include "platform/platform.h"
 #include "edge-task/edge-task.h"
 #include "uart-task/uart-task.h"
+#include "block-task/block-task.h"
 
 #define DEFAULT_PI_TERMS 1000000u
 
@@ -439,6 +440,87 @@ static void cmd_block(const command_t *command)
     }
 }
 
+// Приём UART1 запоминается до завершения блока ADC/DMA.
+// Callback UART не печатает данные: блок может быть ещё не готов.
+#define SCOPE_SAMPLES PLATFORM_BLOCK_MAX
+#define SCOPE_BAUD_MIN 9600u
+#define SCOPE_BAUD_MAX 115200u
+#define SCOPE_TEXT_MAX 4u
+static uint32_t scope_baud;
+static char scope_rx[SCOPE_TEXT_MAX + 1];
+static uint32_t scope_rx_errors;
+
+static void print_scope_rx(const uint8_t *data, size_t size, uint32_t errors)
+{
+    if (size > SCOPE_TEXT_MAX)
+        size = SCOPE_TEXT_MAX;
+    for (size_t i = 0; i < size; ++i)
+        scope_rx[i] = isprint((unsigned char)data[i]) ? (char)data[i] : '.';
+    scope_rx[size] = '\0';
+    scope_rx_errors = errors;
+}
+
+// Результат выводится в суперцикле через block_task_handle(), не в DMA IRQ.
+static void print_scope(const uint16_t *samples, uint32_t count, uint32_t time_us)
+{
+    (void)time_us;
+    platform_uart_baud_set(PLATFORM_UART0, 115200u);
+    platform_uart_baud_set(PLATFORM_UART1, 115200u);
+    printf("scope: %u samples, %u Hz, %u baud, uart1 %s ",
+           (unsigned)count, (unsigned)PLATFORM_SAMPLE_RATE_HZ,
+           (unsigned)scope_baud, scope_rx);
+    print_errors(scope_rx_errors);
+
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        if (i != 0 && i % 16u == 0)
+            putchar('\n');
+        else if (i % 16u != 0)
+            putchar(' ');
+        printf("%u", (unsigned)samples[i]);
+    }
+    putchar('\n');
+    printf("scope: end\n");
+}
+
+static void cmd_scope(const command_t *command)
+{
+    uint32_t baud;
+    if (command->argc != 2 ||
+        !parse_u32(command->argv[0], &baud) ||
+        baud < SCOPE_BAUD_MIN || baud > SCOPE_BAUD_MAX ||
+        command->argv[1][0] == '\0' ||
+        strlen(command->argv[1]) > SCOPE_TEXT_MAX)
+    {
+        printf("error: usage scope <baud> <text>\n");
+        return;
+    }
+    if (uart_task_busy())
+    {
+        printf("error: uart is busy\n");
+        return;
+    }
+
+    platform_uart_baud_set(PLATFORM_UART0, baud);
+    platform_uart_baud_set(PLATFORM_UART1, baud);
+    scope_baud = baud;
+    scope_rx[0] = '\0';
+    scope_rx_errors = 0;
+
+    // ВАЖНО: сначала запуск захвата, потом передача UART0 -> UART1.
+    if (!block_task_start(SCOPE_SAMPLES, print_scope))
+    {
+        platform_uart_baud_set(PLATFORM_UART0, 115200u);
+        platform_uart_baud_set(PLATFORM_UART1, 115200u);
+        printf("error: adc busy\n");
+        return;
+    }
+    // Проверка uart_task_busy выше гарантирует свободный обмен.
+    (void)uart_task_start(PLATFORM_UART0, PLATFORM_UART1,
+                          (const uint8_t *)command->argv[1],
+                          strlen(command->argv[1]), print_scope_rx);
+}
+
 const api_command_t api_commands[] = {
     { "info", "device passport", cmd_info },
     { "uptime", "time since reset", cmd_uptime },
@@ -451,6 +533,7 @@ const api_command_t api_commands[] = {
     { "button", "button state and press count", cmd_button },
     { "edge", "rise and fall of the RC line: edge pp|od", cmd_edge },
     { "block", "64 bytes from UART1 to UART0: block irq|poll", cmd_block },
+    { "scope", "UART0 line on ADC: scope <baud> <text>", cmd_scope },
     { "link", "text from UART0 to UART1 and back: link <text>", cmd_link },
     { "baud_shift", "shift UART1 baud rate: baud_shift <percent>", cmd_baud_shift },
     { "text", "32 characters from UART1 to UART0", cmd_text },

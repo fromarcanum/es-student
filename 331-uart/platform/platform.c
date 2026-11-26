@@ -2,6 +2,8 @@
 
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
+#include "hardware/dma.h"
+#include "pico/time.h"
 #include "hardware/uart.h"
 #include "hardware/regs/uart.h"
 #include "hardware/irq.h"
@@ -32,6 +34,42 @@ static void on_uart0_rx(void)
 }
 
 
+// Захват блока АЦП выполняется DMA, IRQ лишь сигнализирует завершение.
+static int block_channel;
+static uint16_t block_samples[PLATFORM_BLOCK_MAX];
+static volatile uint32_t block_start_us;
+static volatile uint32_t block_end_us;
+static volatile bool block_ready;
+static volatile bool block_busy;
+
+static void adc_free_running(void)
+{
+    adc_run(false);
+    adc_fifo_drain();
+    adc_select_input(ADC_CHANNEL);
+    adc_fifo_setup(true, true, 1, false, false);
+    // АЦП RP2040: 96 тактов на отсчёт, на пределе делитель ДОЛЖЕН быть 0.
+    adc_set_clkdiv(0);
+}
+
+static void adc_one_shot(void)
+{
+    adc_run(false);
+    adc_fifo_drain();
+    adc_fifo_setup(false, false, 0, false, false);
+    adc_set_clkdiv(0);
+    adc_select_input(ADC_CHANNEL);
+}
+
+static void on_block_done(void)
+{
+    dma_channel_acknowledge_irq1(block_channel);
+    block_end_us = time_us_32();
+    adc_one_shot();
+    block_busy = false;
+    block_ready = true;
+}
+
 // Опорное напряжение и число уровней 12-разрядного АЦП.
 #define ADC_VREF_V 3.3f
 #define ADC_LEVELS 4096
@@ -50,6 +88,12 @@ void platform_init(void)
 
     adc_init();
     adc_gpio_init(ADC_PIN);
+
+    // DMA_IRQ_1 -- единственный обработчик завершения ADC-блока.
+    block_channel = dma_claim_unused_channel(true);
+    dma_channel_set_irq1_enabled(block_channel, true);
+    irq_set_exclusive_handler(DMA_IRQ_1, on_block_done);
+    irq_set_enabled(DMA_IRQ_1, true);
 
     gpio_init(LINE_PIN);
     platform_line_set(PLATFORM_LINE_PUSH_PULL, false);
@@ -175,4 +219,42 @@ void platform_uart_parity_set(platform_uart_t uart, platform_parity_t parity)
 void platform_uart_rx_irq_set(bool on)
 {
     uart_set_irqs_enabled(uart0, on, false);
+}
+
+// Неблокирующий сбор 4096 отсчётов с максимальной частотой ADC.
+bool platform_block_start(uint32_t count)
+{
+    if (block_busy || count == 0 || count > PLATFORM_BLOCK_MAX)
+        return false;
+
+    block_ready = false;
+    block_busy = true;
+    block_end_us = 0;
+    adc_free_running();
+
+    dma_channel_config cfg = dma_channel_get_default_config(block_channel);
+    channel_config_set_transfer_data_size(&cfg, DMA_SIZE_16);
+    channel_config_set_read_increment(&cfg, false);
+    channel_config_set_write_increment(&cfg, true);
+    channel_config_set_dreq(&cfg, DREQ_ADC);
+    dma_channel_configure(block_channel, &cfg,
+                          block_samples, &adc_hw->fifo, count, true);
+    block_start_us = time_us_32();
+    adc_run(true);
+    return true;
+}
+
+bool platform_block_done(void)
+{
+    return block_ready;
+}
+
+const uint16_t *platform_block_samples(void)
+{
+    return block_samples;
+}
+
+uint32_t platform_block_time_us(void)
+{
+    return block_end_us - block_start_us;
 }

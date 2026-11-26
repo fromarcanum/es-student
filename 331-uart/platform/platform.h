@@ -52,3 +52,12 @@ uint32_t platform_uart_baud_set(platform_uart_t uart, uint32_t baud);
 void platform_uart_parity_set(platform_uart_t uart, platform_parity_t parity);
 
 void platform_uart_rx_irq_set(bool on);
+
+// Захват осциллограммы линии UART0 (GP0 -> GP26) на 500 kS/s.
+#define PLATFORM_SAMPLE_RATE_HZ 500000u
+#define PLATFORM_BLOCK_MAX 4096u
+
+bool platform_block_start(uint32_t count);
+bool platform_block_done(void);
+const uint16_t *platform_block_samples(void);
+uint32_t platform_block_time_us(void);
