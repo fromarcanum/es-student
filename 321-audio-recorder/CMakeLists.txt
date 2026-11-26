@@ -65,6 +65,7 @@ target_link_libraries(logic
         profiling
         device
         logging
+        m
 )
 
 # Главная программа.

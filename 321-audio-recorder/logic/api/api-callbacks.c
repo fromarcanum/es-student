@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <math.h>
 
 #include "device/device.h"
 #include "profiling/profiling.h"
@@ -370,6 +371,19 @@ static void print_dma_cap(const uint16_t *samples, uint32_t count, uint32_t time
            (unsigned)min_code, (unsigned)max_code, (double)sum / (double)count);
 }
 
+// Единый путь запуска блока для dma_cap и микрофона.
+// Обработка результата выполняется позже из суперцикла, без ожидания АЦП.
+static bool start_block(uint32_t count, block_task_callback_t callback)
+{
+    if (telemetry_task_get_state() == TELEMETRY_STATE_RUN ||
+        platform_adc_busy() || !block_task_start(count, callback))
+    {
+        printf("error: adc busy\n");
+        return false;
+    }
+    return true;
+}
+
 static void cmd_dma_cap(const command_t *command)
 {
     uint32_t count;
@@ -383,13 +397,85 @@ static void cmd_dma_cap(const command_t *command)
         printf("error: N must be 1..8192\n");
         return;
     }
-    if (telemetry_task_get_state() == TELEMETRY_STATE_RUN ||
-        platform_adc_busy() || !block_task_start(count, print_dma_cap))
+    (void)start_block(count, print_dma_cap);
+    // Ничего не ждём: ответ появится при следующем block_task_handle().
+}
+
+// Среднее и отклонения блока АЦП без вычислений с float в цикле.
+static void block_stats(const uint16_t *samples, uint32_t count,
+                        float *mean, float *rms, float *peak)
+{
+    uint32_t sum = 0;
+    for (uint32_t i = 0; i < count; ++i)
+        sum += samples[i];
+
+    int32_t center = (int32_t)(sum / count);
+    uint64_t squares = 0;
+    uint32_t largest = 0;
+    for (uint32_t i = 0; i < count; ++i)
     {
-        printf("error: adc busy\n");
+        int32_t deviation = (int32_t)samples[i] - center;
+        uint32_t size = (uint32_t)(deviation < 0 ? -deviation : deviation);
+        squares += (uint64_t)(deviation * deviation);
+        if (size > largest)
+            largest = size;
+    }
+    *mean = (float)sum / count;
+    *rms = sqrtf((float)squares / count);
+    *peak = (float)largest;
+}
+
+#define MIC_DEFAULT_WINDOW_MS 100u
+#define MIC_BIAS_COUNT 4410u
+
+static void print_mic_bias(const uint16_t *samples, uint32_t count, uint32_t time_us)
+{
+    (void)time_us;
+    float mean, rms, peak;
+    block_stats(samples, count, &mean, &rms, &peak);
+    printf("mic: bias %.3f V\n", (double)platform_adc_volts(mean));
+}
+
+static void print_mic_level(const uint16_t *samples, uint32_t count, uint32_t time_us)
+{
+    (void)time_us;
+    float mean, rms, peak;
+    block_stats(samples, count, &mean, &rms, &peak);
+    // Округление окна исправляет усечение 8158 отсчётов для 185 мс.
+    uint32_t window_ms = (uint32_t)(((uint64_t)count * 1000u +
+                                     PLATFORM_SAMPLE_RATE_HZ / 2u) / PLATFORM_SAMPLE_RATE_HZ);
+    printf("mic: level %.1f mV rms, peak %.1f mV, %u ms\n",
+           (double)(platform_adc_volts(rms) * 1000.0f),
+           (double)(platform_adc_volts(peak) * 1000.0f),
+           (unsigned)window_ms);
+}
+
+static void cmd_mic_bias(const command_t *command)
+{
+    if (command->argc != 0)
+    {
+        printf("error: usage mic_bias\n");
         return;
     }
-    // Ничего не ждём: ответ появится при следующем block_task_handle().
+    (void)start_block(MIC_BIAS_COUNT, print_mic_bias);
+}
+
+static void cmd_mic_level(const command_t *command)
+{
+    uint32_t window_ms = MIC_DEFAULT_WINDOW_MS;
+    if (command->argc > 1 ||
+        (command->argc == 1 && !parse_u32(command->argv[0], &window_ms)))
+    {
+        printf("error: usage mic_level [<ms>]\n");
+        return;
+    }
+    uint64_t count = (uint64_t)window_ms * PLATFORM_SAMPLE_RATE_HZ / 1000u;
+    if (count == 0 || count > PLATFORM_BLOCK_MAX)
+    {
+        printf("error: ms must be 1..185\n");
+        return;
+    }
+    (void)start_block((uint32_t)count, print_mic_level);
 }
 
 // Отправка полных двоичных кадров принадлежит API, задача потока не печатает.
@@ -579,6 +665,8 @@ const api_command_t api_commands[] = {
     { "cap_start", "capture ADC by timer: cap_start <N> <period_us>", cmd_cap_start },
     { "cap_dump", "dump ADC capture and timing", cmd_cap_dump },
     { "dma_cap", "DMA block capture: dma_cap <N>", cmd_dma_cap },
+    { "mic_bias", "microphone DC offset", cmd_mic_bias },
+    { "mic_level", "microphone level [window_ms]", cmd_mic_level },
     { "stream_start", "start ADC stream [8|16]", cmd_stream_start },
     { "stream_stop", "stop ADC stream", cmd_stream_stop },
     { "wdt_enable", "enable watchdog: wdt_enable <timeout_ms>", cmd_wdt_enable },

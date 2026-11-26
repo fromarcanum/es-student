@@ -1,0 +1,67 @@
+задание: 3.2.7
+проект: 321-audio-recorder
+устройство: 2e8a:000a
+серийный номер: E6609103C3662D26
+порт: COM23
+начало: 2026-11-26T11:45:00
+   0.000 -->
+   0.554 --> help
+   0.555 <-- help
+   0.556 <-- help              list of commands
+   0.556 <-- info              device passport
+   0.556 <-- uptime            time since reset
+   0.556 <-- profiling         show timing statistics
+   0.557 <-- profiling_reset   reset timing statistics
+   0.557 <-- led_enable        turn LED on
+   0.557 <-- led_disable       turn LED off
+   0.558 <-- led_blink         blink LED
+   0.558 <-- led_period        set LED period
+   0.558 <-- button            button state and press count
+   0.558 <-- get_voltage       voltage on GP26, ADC input 0
+   0.559 <-- get_temp          chip temperature, degrees Celsius
+   0.559 <-- tm_start          start telemetry [period_ms]
+   0.559 <-- tm_stop           stop telemetry
+   0.559 <-- timer_blink_start blink led by timer: timer_blink_start <period_ms>
+   0.560 <-- timer_blink_stop  stop timer blink, number of toggles
+   0.560 <-- cap_start         capture ADC by timer: cap_start <N> <period_us>
+   0.560 <-- cap_dump          dump ADC capture and timing
+   0.560 <-- dma_cap           DMA block capture: dma_cap <N>
+   0.560 <-- mic_bias          microphone DC offset
+   0.561 <-- mic_level         microphone level [window_ms]
+   0.561 <-- stream_start      start ADC stream [8|16]
+   0.561 <-- stream_stop       stop ADC stream
+   0.561 <-- wdt_enable        enable watchdog: wdt_enable <timeout_ms>
+   0.561 <-- hang              test watchdog by stopping superloop
+   0.562 <-- reset_reason      last reset reason and watchdog restarts
+   0.562 <-- generate_tone     set PWM tone: generate_tone <Hz>
+   0.562 <-- pi_start          start PI calculation
+   0.616 <-- pi                PI calculation status or result
+   1.555 --> info
+   1.616 <-- info
+   1.617 <-- name: es-recorder
+   1.617 <-- version: 1.0.0
+   1.617 <-- project: 321-audio-recorder
+   1.617 <-- repo: https://github.com/fromarcanum/es-student
+   1.617 <-- board: pico
+   1.617 <-- serial: E6609103C3662D26
+   1.618 <-- chip: manufacturer 0x927, part 0x0002, revision 1
+   1.618 <-- pico-sdk: 2.3.0
+   2.612 --> mic_bias
+   2.674 <-- mic_bias
+   2.736 <-- mic: bias 1.266 V
+   3.174 --> mic_level
+   3.236 <-- mic_level
+   3.297 <-- mic: level 14.0 mV rms, peak 63.6 mV, 100 ms
+   3.734 --> mic_level 50
+   3.796 <-- mic_level 50
+   3.796 <-- mic: level 15.3 mV rms, peak 62.8 mV, 50 ms
+   4.295 --> mic_level 185
+   4.356 <-- mic_level 185
+   4.544 <-- mic: level 14.6 mV rms, peak 66.9 mV, 185 ms
+   4.853 --> mic_level 0
+   4.917 <-- mic_level 0
+   4.917 <-- error: ms must be 1..185
+   5.354 --> mic_level 200
+   5.418 <-- mic_level 200
+   5.418 <-- error: ms must be 1..185
+итог: отправлено кадров 9, принято строк 51

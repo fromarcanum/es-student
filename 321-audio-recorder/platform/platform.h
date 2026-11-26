@@ -7,6 +7,8 @@ void platform_init(void);
 void platform_led_set(bool on);
 bool platform_button_read(void);
 float platform_voltage_read(void);
+// Перевод дробного кода ADC0 в вольты, опора известна только platform.
+float platform_adc_volts(float code);
 float platform_temp_read(void);
 
 // Индикатор мигает по будильнику таймера, независимо от суперцикла.
